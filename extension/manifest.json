@@ -5,6 +5,9 @@
   "version": "0.0.1",
   "author": "Devon Crebbin",
   "icons": {},
+  "background": {
+    "service_worker": "src/background.ts"
+  },
   "permissions": [
     "activeTab"
   ],
@@ -12,7 +15,8 @@
     {
       "matches": [
         "https://messenger.com/*",
-        "https://www.messenger.com/*"
+        "https://www.messenger.com/*",
+        "http://localhost:3103/*"
       ],
       "js": [
         "src/pages/content/index.ts"

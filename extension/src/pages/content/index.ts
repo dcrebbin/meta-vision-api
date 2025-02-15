@@ -78,7 +78,7 @@ async function takeScreenOfWebPage() {
   context?.drawImage(bitmap, 0, 0);
   const screenshot = canvas.toDataURL();
   downloadImage(screenshot);
-  sendImageToServer(screenshot);
+  await sendImageToServer(screenshot);
 }
 
 function downloadImage(imageUrl: string) {
@@ -88,14 +88,19 @@ function downloadImage(imageUrl: string) {
   a.click();
 }
 
-function sendImageToServer(imageUrl: string) {
-  fetch("http://localhost:3103/api/gpt-4-vision", {
-    method: "POST",
-    body: JSON.stringify({ imageUrl }),
-    headers: {
-      "Content-Type": "application/json",
-    },
+async function sendImageToServer(imageUrl: string) {
+  // fetch("http://localhost:3103/api/gpt-4-vision", {
+  //   method: "POST",
+  //   body: JSON.stringify({ imageUrl }),
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //   },
+  // });
+  const response = await chrome.runtime.sendMessage({
+    action: "takeScreenshot",
+    imageUrl,
   });
+  console.log("Response", response);
 }
 
 monitorVideoButton.addEventListener("click", () => {

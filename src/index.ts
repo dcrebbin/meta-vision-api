@@ -3,7 +3,9 @@ import { readFile, writeFile } from "fs/promises";
 // Use this pre-prompt to customize what you want GPT4-Vision todo
 const PRE_PROMPT = `What is in this image?`;
 const GPT_VISION_MODEL = process.env.GPT_VISION_MODEL || "gpt-4-vision-preview";
-const COMPLETIONS_ENDPOINT = process.env.COMPLETIONS_ENDPOINT || "https://api.openai.com/v1/chat/completions";
+const COMPLETIONS_ENDPOINT =
+  process.env.COMPLETIONS_ENDPOINT ||
+  "https://api.openai.com/v1/chat/completions";
 const SAVED_DATA = "./public/data.json";
 
 //Facebook Messenger whitelists this localhost port so is the only one you can currently use
@@ -11,15 +13,16 @@ const PORT = 3103;
 
 const CORS_HEADERS = {
   headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'OPTIONS, POST',
-      'Access-Control-Allow-Headers': 'Content-Type',
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "OPTIONS, POST",
+    "Access-Control-Allow-Headers": "Content-Type",
   },
 };
 
 const server = Bun.serve({
   port: PORT,
   fetch(request) {
+    console.log("Request received", request.method, request.url);
     // Handle CORS preflight requests
     if (request.method === "OPTIONS") {
       const res = new Response("Departed", CORS_HEADERS);
@@ -41,8 +44,15 @@ const server = Bun.serve({
 });
 
 async function handleVisionRequest(request: Request) {
-  if (request.method !== "POST" || request.headers.get("Content-Type") !== "application/json") {
-    console.log("Invalid request", request.method, request.headers.get("Content-Type"));
+  if (
+    request.method !== "POST" ||
+    request.headers.get("Content-Type") !== "application/json"
+  ) {
+    console.log(
+      "Invalid request",
+      request.method,
+      request.headers.get("Content-Type")
+    );
     return new Response("Invalid request", { status: 400 });
   }
 
@@ -50,7 +60,10 @@ async function handleVisionRequest(request: Request) {
     const imageUrl = (await request.json()).imageUrl;
     const responseContent = await analyzeImage(imageUrl);
     await saveData(imageUrl, responseContent);
-    return new Response(JSON.stringify(responseContent), { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify(responseContent), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error(error);
     return new Response("Internal Server Error", { status: 500 });
@@ -93,7 +106,11 @@ async function analyzeImage(imageUrl: string) {
 // Pseudo database via a JSON file
 async function saveData(imageUrl: string, description: string) {
   console.log("Saving data");
-  const createdObject = { time: new Date().toISOString(), imageDescription: description, imageUrl };
+  const createdObject = {
+    time: new Date().toISOString(),
+    imageDescription: description,
+    imageUrl,
+  };
   try {
     let data = [];
     try {
