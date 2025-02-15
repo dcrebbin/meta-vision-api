@@ -1,11 +1,28 @@
 import { readFile, writeFile } from "fs/promises";
 
-// Use this pre-prompt to customize what you want GPT4-Vision todo
+// Use this pre-prompt to customize what you want your specified vision model todo
 const PRE_PROMPT = `What is in this image?`;
-const GPT_VISION_MODEL = process.env.GPT_VISION_MODEL || "gpt-4-vision-preview";
-const COMPLETIONS_ENDPOINT =
-  process.env.COMPLETIONS_ENDPOINT ||
-  "https://api.openai.com/v1/chat/completions";
+
+//enum for the different models
+enum VisionModel {
+  GPT_4_O = "gpt-4o",
+  GPT_4_O_MINI = "gpt-4o-mini",
+  SONNET_3_5 = "sonnet-3.5",
+  GEMINI_FLASH_2 = "gemini-flash-2",
+  DEEPSEEK_R1 = "deepseek-r1",
+  QWEN_2_5 = "qwen-2.5",
+}
+
+enum AiProviderEndpoints {
+  OPENAI = "https://api.openai.com/v1/chat/completions",
+  ANTHROPIC = "https://api.anthropic.com/v1/messages",
+  GEMINI = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+  DEEPSEEK = "https://api.deepseek.com/v1/chat/completions",
+  QWEN = "https://api.qwen.aliyun.com/v1/chat/completions",
+}
+
+const VISION_MODEL = VisionModel.GPT_4_O_MINI;
+const VISION_ENDPOINT = AiProviderEndpoints.OPENAI;
 const SAVED_DATA = "./public/data.json";
 
 //Facebook Messenger whitelists this localhost port so is the only one you can currently use
@@ -30,8 +47,8 @@ const server = Bun.serve({
     }
     const url = new URL(request.url);
     switch (url.pathname) {
-      case "/api/gpt-4-vision":
-        console.log("GPT4 Vision Request");
+      case "/api/vision":
+        console.log("Vision Request");
         return handleVisionRequest(request);
       case "/api/status":
         console.log("API Status Request");
@@ -71,9 +88,9 @@ async function handleVisionRequest(request: Request) {
 }
 
 async function analyzeImage(imageUrl: string) {
-  const token = process.env.OPENAI_API_KEY;
+  const token = process.env.VISION_API_KEY;
   const body = {
-    model: GPT_VISION_MODEL,
+    model: VISION_MODEL,
     messages: [
       {
         role: "user",
@@ -84,8 +101,8 @@ async function analyzeImage(imageUrl: string) {
       },
     ],
   };
-  console.log("Sending request to GPT4 Vision");
-  const response = await fetch(COMPLETIONS_ENDPOINT, {
+  console.log("Sending request to our specified vision model");
+  const response = await fetch(VISION_ENDPOINT, {
     method: "POST",
     body: JSON.stringify(body),
     headers: {

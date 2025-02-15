@@ -4,7 +4,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log("taking screenshot");
 
     // Start async work and return true to indicate we'll send response later
-    fetch("http://localhost:3103/api/gpt-4-vision", {
+    fetch("http://localhost:3103/api/vision", {
       method: "POST",
       body: JSON.stringify({ imageUrl: request.imageUrl }),
       headers: {
