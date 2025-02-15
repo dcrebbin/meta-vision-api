@@ -126,7 +126,6 @@ async function saveData(imageUrl: string, description: string) {
   const createdObject = {
     time: new Date().toISOString(),
     imageDescription: description,
-    imageUrl,
   };
   try {
     let data = [];
