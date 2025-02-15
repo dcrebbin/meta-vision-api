@@ -1,25 +1,130 @@
 console.log("Meta Glasses Video Monitor extension loaded");
 
-let isMonitoring = false;
-// add a button to the page
-const button = document.createElement("button");
-button.style.position = "fixed";
-button.style.bottom = "10px";
-button.style.right = "10px";
-button.style.zIndex = "999999";
-button.style.backgroundColor = "white";
-button.style.color = "black";
-button.style.border = "none";
-button.style.padding = "10px";
-button.style.borderRadius = "5px";
-button.textContent = "Monitor Video";
-button.addEventListener("click", () => {
-  console.log("Monitor Video button clicked");
-  isMonitoring = !isMonitoring;
-  if (isMonitoring) {
-    button.textContent = "Stop Monitoring";
-  } else {
-    button.textContent = "Monitor Video";
+let stream: MediaStream | null = null;
+let isPermissionGranted = false;
+
+function createButton(title: string, id: string) {
+  const button = document.createElement("button");
+  button.style.backgroundColor = "white";
+  button.style.color = "black";
+  button.style.border = "none";
+  button.style.padding = "10px";
+  button.style.borderRadius = "5px";
+  button.style.cursor = "pointer";
+  button.textContent = title;
+  button.id = id;
+  return button;
+}
+
+const monitorVideoButton = createButton(
+  "Take Screenshot",
+  "take-screenshot-button"
+);
+
+function disableButton(button: HTMLButtonElement) {
+  button.disabled = true;
+  button.style.backgroundColor = "gray";
+  button.style.cursor = "not-allowed";
+}
+disableButton(monitorVideoButton);
+
+function enableButton(button: HTMLButtonElement) {
+  button.disabled = false;
+  button.style.backgroundColor = "white";
+  button.style.cursor = "pointer";
+}
+
+const requestPermissionButton = createButton(
+  "Request Permissions",
+  "request-permission-button"
+);
+
+async function requestDisplayPermission() {
+  stream = await navigator.mediaDevices
+    .getDisplayMedia({
+      video: true,
+      audio: false,
+    })
+    .catch((err) => {
+      isPermissionGranted = false;
+      console.error("Error requesting display permission", err);
+      return null;
+    });
+  if (stream) {
+    isPermissionGranted = true;
+    requestPermissionButton.textContent = "Permissions Granted";
+    enableButton(monitorVideoButton);
   }
+}
+
+async function takeScreenOfWebPage() {
+  if (!stream || !isPermissionGranted) {
+    await requestDisplayPermission();
+  }
+
+  const track = stream?.getVideoTracks()[0];
+  if (!track) {
+    alert("No video tracks found");
+    return;
+  }
+
+  // @ts-ignore
+  const imageCapture = new ImageCapture(track);
+  const bitmap = await imageCapture.grabFrame();
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const context = canvas.getContext("2d");
+  context?.drawImage(bitmap, 0, 0);
+  const screenshot = canvas.toDataURL();
+  downloadImage(screenshot);
+  sendImageToServer(screenshot);
+}
+
+function downloadImage(imageUrl: string) {
+  const a = document.createElement("a");
+  a.href = imageUrl;
+  a.download = "screenshot.png";
+  a.click();
+}
+
+function sendImageToServer(imageUrl: string) {
+  fetch("http://localhost:3103/api/gpt-4-vision", {
+    method: "POST",
+    body: JSON.stringify({ imageUrl }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+monitorVideoButton.addEventListener("click", () => {
+  console.log("Take Screenshot button clicked");
+  takeScreenOfWebPage();
 });
-document.body.appendChild(button);
+
+requestPermissionButton.addEventListener("click", () => {
+  console.log("Request Permission button clicked");
+  if (isPermissionGranted) {
+    return;
+  }
+  requestDisplayPermission();
+});
+
+function createContainer() {
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.bottom = "10px";
+  container.style.right = "10px";
+  container.style.zIndex = "999999";
+  container.style.display = "flex";
+  container.style.flexDirection = "row";
+  container.style.gap = "10px";
+  return container;
+}
+
+const container = createContainer();
+container.appendChild(monitorVideoButton);
+container.appendChild(requestPermissionButton);
+
+document.body.appendChild(container);
