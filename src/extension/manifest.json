@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Meta Glasses Video Monitor",
+  "description": "Monitor your video calls with Meta Glasses",
+  "version": "0.0.1",
+  "author": "Devon Crebbin",
+  "icons": {},
+  "background": {
+    "service_worker": "src/background.ts"
+  },
+  "action": {
+    "default_popup": "src/pages/popup/popup.html"
+  },
+  "permissions": [
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://messenger.com/*",
+        "https://facebook.com/*",
+        "https://www.facebook.com/*",
+        "https://www.messenger.com/*",
+        "http://localhost:3103/*"
+      ],
+      "js": [
+        "src/pages/content/index.ts"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [],
+      "matches": [
+        "*://*.messenger.com/*",
+        "*://*.facebook.com/*",
+        "*://*.www.facebook.com/*",
+        "*://*.www.messenger.com/*"
+      ]
+    }
+  ]
+}

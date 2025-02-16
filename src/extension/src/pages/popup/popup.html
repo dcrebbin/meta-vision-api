@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Meta Glasses Video Monitor</title>
+    <style>
+      body {
+        min-width: 300px;
+        max-width: 100vw;
+        margin: 0;
+        padding: 16px;
+        background-color: #1c1e21;
+        color: white;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+
+      h1 {
+        font-size: 18px;
+        margin: 0 0 16px 0;
+      }
+
+      #app {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .control-panel {
+        background: rgb(76, 76, 76);
+        padding: 12px;
+        border-radius: 5px;
+      }
+
+      #logs-container {
+        gap: 10px;
+        display: flex;
+        flex-direction: column-reverse;
+      }
+
+      button {
+        width: 100%;
+        padding: 8px;
+        background: #4a4a4a;
+        border: none;
+        border-radius: 4px;
+        color: white;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #5a5a5a;
+      }
+
+      #top-bar{
+        display: flex;
+        justify-content:space-between;
+        gap:10px;
+        align-items: flex-end;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="top-bar">
+        <h1>Meta Glasses Logs Viewer</h1>
+        <div class="control-panel" style="padding: 4px;">
+          <button id="popoutWindow"><svg style="width:25px;height:25px" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+</svg>
+</button>
+        </div>
+      </div>
+      <div id="logs-container"></div>
+    </div>
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>
