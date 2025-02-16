@@ -219,13 +219,15 @@ function cropImage(imageUrl: string): Promise<string> {
     const image = new Image();
     image.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = image.width;
+      // Crop 300px from each side (left and right) to estimate the size of the video call window in portrait mode
+      const horizontalCrop = 300;
+      canvas.width = image.width - horizontalCrop * 2;
       // Reduce height by 100px to account for the monitoring bottom bar
       canvas.height = image.height - 100;
       const context = canvas.getContext("2d");
       if (context) {
-        context.drawImage(image, 0, 0);
-        const croppedImage = canvas.toDataURL("image/jpeg", imageQuality); // Use JPEG with 50% quality
+        context.drawImage(image, -horizontalCrop, 0);
+        const croppedImage = canvas.toDataURL("image/jpeg", imageQuality);
         resolve(croppedImage);
       }
     };
