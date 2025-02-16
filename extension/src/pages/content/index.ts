@@ -8,30 +8,86 @@ let isMonitoring = false;
 let intervalId: NodeJS.Timeout | null = null;
 let increment = 0;
 
-function createButton(title: string, id: string) {
+const cameraOnIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+</svg>
+`;
+const cameraOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M12 18.75H4.5a2.25 2.25 0 0 1-2.25-2.25V9m12.841 9.091L16.5 19.5m-1.409-1.409c.407-.407.659-.97.659-1.591v-9a2.25 2.25 0 0 0-2.25-2.25h-9c-.621 0-1.184.252-1.591.659m12.182 12.182L2.909 5.909M1.5 4.5l1.409 1.409" />
+</svg>
+`;
+
+const screenshotIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+</svg>
+`;
+
+const permissionsIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 4.5-15 15m0 0h11.25m-11.25 0V8.25" />
+</svg>
+`;
+
+function createButton(title: string, id: string, icon: string) {
   const button = document.createElement("button");
-  button.style.backgroundColor = "white";
-  button.style.color = "black";
+  button.style.backgroundColor = "#474747";
+  button.addEventListener("mouseover", () => {
+    if (button.disabled || button.style.backgroundColor === "green") {
+      return;
+    }
+    button.style.backgroundColor = "#666666";
+  });
+  button.addEventListener("mouseout", () => {
+    if (button.disabled || button.style.backgroundColor === "green") {
+      return;
+    }
+    button.style.backgroundColor = "#474747";
+  });
+  button.style.display = "flex";
+  button.style.flexDirection = "row";
+  button.style.gap = "5px";
+  button.style.alignItems = "center";
+  button.style.justifyContent = "center";
+  button.style.boxShadow = "0px 0px 10px 0px rgba(0, 0, 0, 0.5)";
+  button.style.color = "white";
   button.style.border = "none";
+  button.style.fontSize = "14px";
+  button.style.fontWeight = "bold";
   button.style.padding = "10px";
   button.style.borderRadius = "5px";
   button.style.cursor = "pointer";
-  button.textContent = title;
+  const buttonText = document.createElement("span");
+  buttonText.textContent = title;
+  buttonText.style.fontSize = "14px";
+  buttonText.style.fontWeight = "bold";
+  button.appendChild(buttonText);
   button.id = id;
+
+  const iconElement = document.createElement("span");
+  iconElement.style.width = "20px";
+  iconElement.style.height = "20px";
+  iconElement.innerHTML = icon;
+  button.appendChild(iconElement);
   return button;
 }
 
 const takeScreenshotButton = createButton(
   "Take Screenshot",
-  "take-screenshot-button"
+  "take-screenshot-button",
+  screenshotIcon
 );
 
-const monitoringButton = createButton("Start Monitoring", "monitoring-button");
+const monitoringButton = createButton(
+  "Start Monitoring",
+  "monitoring-button",
+  cameraOffIcon
+);
 
 monitoringButton.addEventListener("click", () => {
   if (isMonitoring) {
     isMonitoring = false;
-    monitoringButton.textContent = "Start Monitoring";
+    monitoringButton.children[0].innerHTML = "Start Monitoring";
+    monitoringButton.children[1].innerHTML = cameraOffIcon;
     enableButton(takeScreenshotButton);
     if (intervalId) {
       clearInterval(intervalId);
@@ -39,7 +95,8 @@ monitoringButton.addEventListener("click", () => {
     }
   } else {
     isMonitoring = true;
-    monitoringButton.textContent = "Stop Monitoring";
+    monitoringButton.children[0].innerHTML = "Stop Monitoring";
+    monitoringButton.children[1].innerHTML = cameraOnIcon;
     disableButton(takeScreenshotButton);
     intervalId = setInterval(() => {
       takeAndSendScreenshot();
@@ -51,9 +108,11 @@ function createMonitoringIntervalContainer() {
   const intervalLabel = document.createElement("p");
   intervalLabel.textContent = "Monitoring Interval (ms):";
   intervalLabel.style.marginLeft = "10px";
-
+  intervalLabel.style.fontSize = "14px";
+  intervalLabel.style.fontWeight = "bold";
+  intervalLabel.style.color = "white";
   const intervalContainer = document.createElement("div");
-  intervalContainer.style.backgroundColor = "white";
+  intervalContainer.style.backgroundColor = "#474747";
   intervalContainer.style.borderRadius = "5px";
   intervalContainer.style.display = "flex";
   intervalContainer.style.alignItems = "center";
@@ -61,6 +120,10 @@ function createMonitoringIntervalContainer() {
   const intervalInput = document.createElement("input");
   intervalInput.type = "number";
   intervalInput.placeholder = "Interval (ms)";
+  intervalInput.style.backgroundColor = "#474747";
+  intervalInput.style.color = "white";
+  intervalInput.style.fontSize = "14px";
+  intervalInput.style.fontWeight = "bold";
   intervalInput.value = "500";
   intervalInput.min = "100";
   intervalInput.max = "10000";
@@ -88,13 +151,14 @@ function buttonLoading(button: HTMLButtonElement) {
 
 function enableButton(button: HTMLButtonElement) {
   button.disabled = false;
-  button.style.backgroundColor = "white";
+  button.style.backgroundColor = "#474747";
   button.style.cursor = "pointer";
 }
 
 const requestPermissionButton = createButton(
   "Request Permissions",
-  "request-permission-button"
+  "request-permission-button",
+  permissionsIcon
 );
 
 async function requestDisplayPermission() {
@@ -110,13 +174,15 @@ async function requestDisplayPermission() {
     });
   if (stream) {
     isPermissionGranted = true;
-    requestPermissionButton.textContent = "Permissions Granted";
+    requestPermissionButton.children[0].innerHTML = "Permissions Granted";
+    requestPermissionButton.style.backgroundColor = "green";
+    requestPermissionButton.children[1].innerHTML = "✓";
     enableButton(takeScreenshotButton);
     enableButton(monitoringButton);
   }
 }
 
-async function takeAndSendScreenshot() {
+async function takeAndSendScreenshot(sendToServer: boolean = true) {
   if (!stream || !isPermissionGranted) {
     await requestDisplayPermission();
   }
@@ -136,7 +202,33 @@ async function takeAndSendScreenshot() {
   const context = canvas.getContext("2d");
   context?.drawImage(bitmap, 0, 0);
   const screenshot = canvas.toDataURL();
-  await sendImageToServer(screenshot);
+  const croppedImage = await cropImage(screenshot);
+  if (sendToServer) {
+    await sendImageToServer(croppedImage);
+  } else {
+    downloadImage(croppedImage);
+  }
+  isWaitingForResponse = false;
+  enableButton(takeScreenshotButton);
+}
+
+function cropImage(imageUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      // Reduce height by 100px to account for the monitoring bottom bar
+      canvas.height = image.height - 100;
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.drawImage(image, 0, 0);
+        const croppedImage = canvas.toDataURL("image/jpeg", 0.5); // Use JPEG with 50% quality
+        resolve(croppedImage);
+      }
+    };
+    image.src = imageUrl;
+  });
 }
 
 function downloadImage(imageUrl: string) {
@@ -163,7 +255,7 @@ takeScreenshotButton.addEventListener("click", () => {
   }
   isWaitingForResponse = true;
   buttonLoading(takeScreenshotButton);
-  takeAndSendScreenshot();
+  takeAndSendScreenshot(false);
 });
 
 function sendLog(data: { content: string; timeReceived: string }) {
