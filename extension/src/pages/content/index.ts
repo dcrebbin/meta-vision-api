@@ -2,6 +2,7 @@ console.log("Meta Glasses Video Monitor extension loaded");
 
 let stream: MediaStream | null = null;
 let isPermissionGranted = false;
+let isWaitingForResponse = false;
 
 function createButton(title: string, id: string) {
   const button = document.createElement("button");
@@ -26,6 +27,13 @@ function disableButton(button: HTMLButtonElement) {
   button.style.backgroundColor = "gray";
   button.style.cursor = "not-allowed";
 }
+
+function buttonLoading(button: HTMLButtonElement) {
+  button.disabled = true;
+  button.style.backgroundColor = "gray";
+  button.style.cursor = "wait";
+}
+
 disableButton(monitorVideoButton);
 
 function enableButton(button: HTMLButtonElement) {
@@ -58,6 +66,11 @@ async function requestDisplayPermission() {
 }
 
 async function takeScreenOfWebPage() {
+  if (isWaitingForResponse) {
+    return;
+  }
+  isWaitingForResponse = true;
+  buttonLoading(monitorVideoButton);
   if (!stream || !isPermissionGranted) {
     await requestDisplayPermission();
   }
@@ -92,7 +105,8 @@ async function sendImageToServer(imageUrl: string) {
     action: "takeScreenshot",
     imageUrl,
   })) as { data: string };
-
+  isWaitingForResponse = false;
+  enableButton(monitorVideoButton);
   sendLog(response.data);
 }
 
