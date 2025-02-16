@@ -3,10 +3,12 @@ console.log("Meta Glasses Video Monitor extension loaded");
 let stream: MediaStream | null = null;
 let isPermissionGranted = false;
 let isWaitingForResponse = false;
-let interval = 500;
 let isMonitoring = false;
 let intervalId: NodeJS.Timeout | null = null;
-let increment = 0;
+// JPEG quality 0.5 = 50% quality
+let imageQuality = 0.5;
+// Monitoring interval in milliseconds (how often to take a screenshot and send it to the server)
+let interval = 1000;
 
 const cameraOnIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
   <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
@@ -223,7 +225,7 @@ function cropImage(imageUrl: string): Promise<string> {
       const context = canvas.getContext("2d");
       if (context) {
         context.drawImage(image, 0, 0);
-        const croppedImage = canvas.toDataURL("image/jpeg", 0.5); // Use JPEG with 50% quality
+        const croppedImage = canvas.toDataURL("image/jpeg", imageQuality); // Use JPEG with 50% quality
         resolve(croppedImage);
       }
     };

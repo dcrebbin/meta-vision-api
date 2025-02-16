@@ -18,6 +18,8 @@
     {
       "matches": [
         "https://messenger.com/*",
+        "https://facebook.com/*",
+        "https://www.facebook.com/*",
         "https://www.messenger.com/*",
         "http://localhost:3103/*"
       ],
@@ -30,7 +32,10 @@
     {
       "resources": [],
       "matches": [
-        "*://*.messenger.com/*"
+        "*://*.messenger.com/*",
+        "*://*.facebook.com/*",
+        "*://*.www.facebook.com/*",
+        "*://*.www.messenger.com/*"
       ]
     }
   ]
