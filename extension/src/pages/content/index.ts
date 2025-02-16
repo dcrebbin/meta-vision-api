@@ -77,7 +77,6 @@ async function takeScreenOfWebPage() {
   const context = canvas.getContext("2d");
   context?.drawImage(bitmap, 0, 0);
   const screenshot = canvas.toDataURL();
-  downloadImage(screenshot);
   await sendImageToServer(screenshot);
 }
 
@@ -88,75 +87,35 @@ function downloadImage(imageUrl: string) {
   a.click();
 }
 
-function createDevLogContainer() {
-  const container = document.createElement("div");
-  container.style.position = "fixed";
-  container.style.bottom = "10px";
-  container.style.right = "10px";
-  container.style.top = "10px";
-  container.id = "dev-log-container";
-  container.style.display = "flex";
-  container.style.flexDirection = "column";
-  container.style.gap = "10px";
-  container.style.zIndex = "999999";
-  container.style.backgroundColor = "#1c1e21";
-  container.style.color = "white";
-  container.style.padding = "10px";
-  container.style.borderRadius = "5px";
-  container.style.border = "1px solid black";
-  container.style.width = "300px";
-  container.style.height = "300px";
-  container.style.overflowY = "auto";
-  container.style.boxShadow = "rgba(0, 0, 0, 0.3) 0px 0px 16px 0px";
-
-  const heading = document.createElement("h1");
-  heading.style.color = "white";
-  heading.textContent = "Log Viewer";
-  container.appendChild(heading);
-  return container;
-}
-
-const devLogContainer = createDevLogContainer();
-
-function addDevLog(message: string) {
-  const logItem = document.createElement("div");
-  logItem.style.background = "rgb(76, 76, 76)";
-  logItem.style.borderRadius = "0px 5px 0px 5px";
-  logItem.style.padding = "10px";
-  const logText = document.createElement("p");
-  logText.style.margin = "0px";
-  logText.style.color = "white";
-  logText.style.padding = "0px 5px 5px 0px";
-  logText.textContent = message;
-  logItem.appendChild(logText);
-  const logTime = document.createElement("span");
-  const time = new Date().toLocaleTimeString("en-US", { hour12: false });
-  logTime.textContent = time;
-  logTime.style.fontWeight = "bold";
-  logItem.appendChild(logTime);
-  devLogContainer.appendChild(logItem);
-}
-
-addDevLog("hello");
-addDevLog(
-  "hello odfghjsdofhjsodgjhsod jsodfi jsdofjsdoi jsdoi jsdoif jsdoif jsdof jsdoif jsdo "
-);
-addDevLog("hello");
-addDevLog("hello osdifj osdigj dosfigjdsof jsdogjsdog isdjgoi sdjgo");
-
 async function sendImageToServer(imageUrl: string) {
   const response = (await chrome.runtime.sendMessage({
     action: "takeScreenshot",
     imageUrl,
   })) as { data: string };
 
-  addDevLog(response.data);
+  sendLog(response.data);
 }
 
 monitorVideoButton.addEventListener("click", () => {
   console.log("Take Screenshot button clicked");
   takeScreenOfWebPage();
 });
+
+function sendLog(message: string) {
+  chrome.runtime.sendMessage(
+    {
+      action: "addLog",
+      message: message,
+    },
+    (response: any) => {
+      if (chrome.runtime.lastError) {
+        console.error("Error sending message:", chrome.runtime.lastError);
+        return;
+      }
+      console.log("Message sent successfully:", response);
+    }
+  );
+}
 
 requestPermissionButton.addEventListener("click", () => {
   console.log("Request Permission button clicked");
@@ -183,4 +142,3 @@ container.appendChild(monitorVideoButton);
 container.appendChild(requestPermissionButton);
 
 document.body.appendChild(container);
-document.body.appendChild(devLogContainer);

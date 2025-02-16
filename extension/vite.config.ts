@@ -26,6 +26,7 @@ const baseConfig = {
     rollupOptions: {
       input: {
         contentScript: resolve(pagesDir, "content/index.ts"),
+        popup: resolve(pagesDir, "popup/popup.html"),
       },
       output: {
         entryFileNames: "dist/[name].js",
