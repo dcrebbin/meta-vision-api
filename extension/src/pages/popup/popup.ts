@@ -8,16 +8,11 @@ document.getElementById("popoutWindow")?.addEventListener("click", () => {
   });
 });
 
-document.getElementById("toggleLogs")?.addEventListener("click", () => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const activeTab = tabs[0];
-    if (activeTab.id) {
-      chrome.tabs.sendMessage(activeTab.id, { action: "toggleLogs" });
-    }
-  });
-});
-
-function addDevLog(message: string, devLogContainer: HTMLDivElement) {
+function addDevLog(
+  message: string,
+  timeReceived: string,
+  devLogContainer: HTMLDivElement
+) {
   const logItem = document.createElement("div");
   logItem.style.background = "rgb(76, 76, 76)";
   logItem.style.borderRadius = "0px 5px 0px 5px";
@@ -28,9 +23,13 @@ function addDevLog(message: string, devLogContainer: HTMLDivElement) {
   logText.style.padding = "0px 5px 5px 0px";
   logText.textContent = message;
   logItem.appendChild(logText);
+  const receivedTime = new Date(timeReceived).toLocaleTimeString("en-US", {
+    hour12: false,
+  });
+
   const logTime = document.createElement("span");
   const time = new Date().toLocaleTimeString("en-US", { hour12: false });
-  logTime.textContent = time;
+  logTime.textContent = `Server Received: ${receivedTime} | Server Response: ${time}`;
   logTime.style.fontWeight = "bold";
   logItem.appendChild(logTime);
   devLogContainer.appendChild(logItem);
@@ -41,7 +40,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const logsContainer = document.getElementById("logs-container");
     if (logsContainer) {
       console.log(message);
-      addDevLog(message.message, logsContainer as HTMLDivElement);
+      addDevLog(
+        message.message,
+        message.timeReceived,
+        logsContainer as HTMLDivElement
+      );
     }
   }
 });

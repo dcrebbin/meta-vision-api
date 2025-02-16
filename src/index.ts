@@ -74,13 +74,17 @@ async function handleVisionRequest(request: Request) {
   }
 
   try {
+    const receivedTime = new Date().toISOString();
     const imageUrl = (await request.json()).imageUrl;
     const responseContent = await analyzeImage(imageUrl);
     await saveData(imageUrl, responseContent);
-    return new Response(JSON.stringify(responseContent), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ content: responseContent, timeReceived: receivedTime }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   } catch (error) {
     console.error(error);
     return new Response("Internal Server Error", { status: 500 });

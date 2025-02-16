@@ -3,6 +3,10 @@ console.log("Meta Glasses Video Monitor extension loaded");
 let stream: MediaStream | null = null;
 let isPermissionGranted = false;
 let isWaitingForResponse = false;
+let interval = 500;
+let isMonitoring = false;
+let intervalId: NodeJS.Timeout | null = null;
+let increment = 0;
 
 function createButton(title: string, id: string) {
   const button = document.createElement("button");
@@ -17,10 +21,58 @@ function createButton(title: string, id: string) {
   return button;
 }
 
-const monitorVideoButton = createButton(
+const takeScreenshotButton = createButton(
   "Take Screenshot",
   "take-screenshot-button"
 );
+
+const monitoringButton = createButton("Start Monitoring", "monitoring-button");
+
+monitoringButton.addEventListener("click", () => {
+  if (isMonitoring) {
+    isMonitoring = false;
+    monitoringButton.textContent = "Start Monitoring";
+    enableButton(takeScreenshotButton);
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  } else {
+    isMonitoring = true;
+    monitoringButton.textContent = "Stop Monitoring";
+    disableButton(takeScreenshotButton);
+    intervalId = setInterval(() => {
+      takeAndSendScreenshot();
+    }, interval);
+  }
+});
+
+function createMonitoringIntervalContainer() {
+  const intervalLabel = document.createElement("p");
+  intervalLabel.textContent = "Monitoring Interval (ms):";
+  intervalLabel.style.marginLeft = "10px";
+
+  const intervalContainer = document.createElement("div");
+  intervalContainer.style.backgroundColor = "white";
+  intervalContainer.style.borderRadius = "5px";
+  intervalContainer.style.display = "flex";
+  intervalContainer.style.alignItems = "center";
+
+  const intervalInput = document.createElement("input");
+  intervalInput.type = "number";
+  intervalInput.placeholder = "Interval (ms)";
+  intervalInput.value = "500";
+  intervalInput.min = "100";
+  intervalInput.max = "10000";
+  intervalInput.style.borderRadius = "5px";
+  intervalInput.style.border = "none";
+  intervalInput.addEventListener("change", (e) => {
+    interval = Number((e.target as HTMLInputElement).value);
+  });
+  intervalContainer.appendChild(intervalLabel);
+  intervalContainer.appendChild(intervalInput);
+  return intervalContainer;
+}
 
 function disableButton(button: HTMLButtonElement) {
   button.disabled = true;
@@ -33,8 +85,6 @@ function buttonLoading(button: HTMLButtonElement) {
   button.style.backgroundColor = "gray";
   button.style.cursor = "wait";
 }
-
-disableButton(monitorVideoButton);
 
 function enableButton(button: HTMLButtonElement) {
   button.disabled = false;
@@ -61,16 +111,12 @@ async function requestDisplayPermission() {
   if (stream) {
     isPermissionGranted = true;
     requestPermissionButton.textContent = "Permissions Granted";
-    enableButton(monitorVideoButton);
+    enableButton(takeScreenshotButton);
+    enableButton(monitoringButton);
   }
 }
 
-async function takeScreenOfWebPage() {
-  if (isWaitingForResponse) {
-    return;
-  }
-  isWaitingForResponse = true;
-  buttonLoading(monitorVideoButton);
+async function takeAndSendScreenshot() {
   if (!stream || !isPermissionGranted) {
     await requestDisplayPermission();
   }
@@ -104,22 +150,28 @@ async function sendImageToServer(imageUrl: string) {
   const response = (await chrome.runtime.sendMessage({
     action: "takeScreenshot",
     imageUrl,
-  })) as { data: string };
+  })) as { data: { content: string; timeReceived: string } };
   isWaitingForResponse = false;
-  enableButton(monitorVideoButton);
+  enableButton(takeScreenshotButton);
   sendLog(response.data);
 }
 
-monitorVideoButton.addEventListener("click", () => {
+takeScreenshotButton.addEventListener("click", () => {
   console.log("Take Screenshot button clicked");
-  takeScreenOfWebPage();
+  if (isWaitingForResponse) {
+    return;
+  }
+  isWaitingForResponse = true;
+  buttonLoading(takeScreenshotButton);
+  takeAndSendScreenshot();
 });
 
-function sendLog(message: string) {
+function sendLog(data: { content: string; timeReceived: string }) {
   chrome.runtime.sendMessage(
     {
       action: "addLog",
-      message: message,
+      message: data.content,
+      timeReceived: data.timeReceived,
     },
     (response: any) => {
       if (chrome.runtime.lastError) {
@@ -139,7 +191,7 @@ requestPermissionButton.addEventListener("click", () => {
   requestDisplayPermission();
 });
 
-function createContainer() {
+function createMainContainer() {
   const container = document.createElement("div");
   container.style.position = "fixed";
   container.style.bottom = "10px";
@@ -151,8 +203,20 @@ function createContainer() {
   return container;
 }
 
-const container = createContainer();
-container.appendChild(monitorVideoButton);
-container.appendChild(requestPermissionButton);
+function addCustomUI() {
+  const mainContainer = createMainContainer();
+  const intervalContainer = createMonitoringIntervalContainer();
+  mainContainer.appendChild(intervalContainer);
+  mainContainer.appendChild(monitoringButton);
+  mainContainer.appendChild(takeScreenshotButton);
+  mainContainer.appendChild(requestPermissionButton);
+  document.body.appendChild(mainContainer);
+}
 
-document.body.appendChild(container);
+function init() {
+  disableButton(takeScreenshotButton);
+  disableButton(monitoringButton);
+  addCustomUI();
+}
+
+init();
