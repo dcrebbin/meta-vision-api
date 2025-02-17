@@ -11,6 +11,7 @@
   "dependencies": {
     "@samrum/rollup-plugin-web-extension": "^0.9.3",
     "@samrum/vite-plugin-web-extension": "^5.1.1",
+    "scrapybara": "^2.2.2",
     "webextension-polyfill": "^0.10.0"
   },
   "devDependencies": {
