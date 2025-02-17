@@ -135,64 +135,70 @@ chatMonitoringButton.addEventListener("click", () => {
     ) as HTMLDivElement;
     if (chat) {
       chatObserver = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          console.log("mutation", mutation);
+        mutations.forEach(async (mutation) => {
           if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
             const div = mutation.addedNodes[0] as HTMLDivElement;
-            const messageContainer = div.querySelector("div.html-div");
-            console.log("messageContainer", messageContainer);
+            const messageContainer = div.querySelector(
+              "div.html-div"
+            ) as HTMLDivElement;
+            if (!messageContainer) {
+              return;
+            }
+            if (messageContainer.style.background == "rgb(0, 132, 255)") {
+              console.log("messageContainer is blue");
+              return;
+            }
             const parent = messageContainer?.parentElement;
             if (
               parent &&
               parent.childNodes.length > 1 &&
               parent?.children[1].childNodes.length > 3
             ) {
-              console.log("found parent", parent);
               const messageLine = parent.childNodes[1];
               if (messageLine.childNodes.length <= 1) {
                 return;
               }
 
               const receivedMessage = messageLine.childNodes[1].textContent;
-              console.log(receivedMessage);
-              if (receivedMessage) {
-                sendLog({
-                  content: receivedMessage,
-                  timeReceived: new Date().toISOString(),
-                });
-              }
-              enterMessage(receivedMessage || "");
-              setTimeout(() => {
-                sendMessage();
-              }, 100);
+              sendMessage(receivedMessage ?? "");
               return;
             }
 
             if (messageContainer && messageContainer?.childNodes?.length > 2) {
               const receivedMessage = messageContainer.textContent;
-              console.log(receivedMessage);
-              if (receivedMessage) {
-                sendLog({
-                  content: receivedMessage,
-                  timeReceived: new Date().toISOString(),
-                });
-                enterMessage(receivedMessage);
-                setTimeout(() => {
-                  sendMessage();
-                }, 100);
-              }
+              sendMessage(receivedMessage ?? "");
             }
           }
         });
       });
-      chatObserver.observe(chat?.parentElement as Node, {
+      chatObserver.observe(chat as Node, {
         childList: true,
         subtree: true,
-        attributes: true,
       });
     }
   }
 });
+
+async function sendMessage(message: string) {
+  sendLog({
+    content: message ?? "",
+    timeReceived: new Date().toISOString(),
+  });
+  const response = await chrome.runtime.sendMessage({
+    action: "sendMessage",
+    message: message,
+  });
+  if (response) {
+    sendLog({
+      content: response.data,
+      timeReceived: new Date().toISOString(),
+    });
+    enterMessage(response.data);
+    setTimeout(() => {
+      sendMessageViaInput();
+    }, 100);
+  }
+}
 
 function enterMessage(message: string) {
   const messageInput = document.querySelector("div[aria-label='Message']");
@@ -212,7 +218,7 @@ function enterMessage(message: string) {
   );
 }
 
-function sendMessage() {
+function sendMessageViaInput() {
   const messageInput = document.querySelector(
     "div[aria-label='Message']"
   ) as HTMLDivElement;
