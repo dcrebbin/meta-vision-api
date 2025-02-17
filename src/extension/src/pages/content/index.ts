@@ -1,3 +1,5 @@
+import { takeAScreenshot } from "./agent";
+
 console.log("Meta Glasses Video Monitor extension loaded");
 
 let stream: MediaStream | null = null;
@@ -138,6 +140,7 @@ chatMonitoringButton.addEventListener("click", () => {
         mutations.forEach(async (mutation) => {
           if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
             const div = mutation.addedNodes[0] as HTMLDivElement;
+            console.log("div", div);
             const messageContainer = div.querySelector(
               "div.html-div"
             ) as HTMLDivElement;
@@ -158,14 +161,16 @@ chatMonitoringButton.addEventListener("click", () => {
               if (messageLine.childNodes.length <= 1) {
                 return;
               }
-
+              console.log("messageLine", messageLine);
               const receivedMessage = messageLine.childNodes[1].textContent;
+              console.log("receivedMessage", receivedMessage);
               sendMessage(receivedMessage ?? "");
               return;
             }
 
             if (messageContainer && messageContainer?.childNodes?.length > 2) {
               const receivedMessage = messageContainer.textContent;
+              console.log("messageContainer", messageContainer);
               sendMessage(receivedMessage ?? "");
             }
           }
@@ -179,14 +184,47 @@ chatMonitoringButton.addEventListener("click", () => {
   }
 });
 
+async function sendImage(base64Image: string) {
+  const fileInput = document.querySelector(
+    'input[type="file"]'
+  ) as HTMLInputElement;
+  if (!fileInput) {
+    return;
+  }
+  // Convert base64 to binary
+  const binaryStr = atob(base64Image);
+  const len = binaryStr.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+
+  const blob = new Blob([bytes], { type: "image/png" });
+  const file = new File([blob], "screenshot.png", { type: "image/png" });
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+  fileInput.files = dataTransfer.files;
+
+  const event = new Event("change", { bubbles: true });
+  fileInput.dispatchEvent(event);
+}
+
 async function sendMessage(message: string) {
   sendLog({
     content: message ?? "",
     timeReceived: new Date().toISOString(),
   });
+
+  if (conversationName.toLowerCase() === "scrapybara") {
+    await scrapybaraSendMessage();
+    return;
+  }
+
   const response = await chrome.runtime.sendMessage({
     action: "sendMessage",
     message: message,
+    model:
+      conversationName.toLowerCase() === "perplexity" ? "perplexity" : "openai",
   });
   if (response) {
     sendLog({
@@ -198,6 +236,14 @@ async function sendMessage(message: string) {
       sendMessageViaInput();
     }, 100);
   }
+}
+
+async function scrapybaraSendMessage() {
+  const base64Image = await takeAScreenshot();
+  await sendImage(base64Image);
+  setTimeout(() => {
+    sendMessageViaInput();
+  }, 500);
 }
 
 function enterMessage(message: string) {

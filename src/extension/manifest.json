@@ -21,7 +21,8 @@
         "https://facebook.com/*",
         "https://www.facebook.com/*",
         "https://www.messenger.com/*",
-        "http://localhost:3103/*"
+        "http://localhost:3103/*",
+        "https://api.openai.com/*"
       ],
       "js": [
         "src/pages/content/index.ts"

@@ -26,6 +26,7 @@ const baseConfig = {
     rollupOptions: {
       input: {
         contentScript: resolve(pagesDir, "content/index.ts"),
+        agent: resolve(pagesDir, "content/agent.ts"),
         popup: resolve(pagesDir, "popup/popup.html"),
       },
       output: {
