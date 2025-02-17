@@ -132,29 +132,97 @@ chatMonitoringButton.addEventListener("click", () => {
     chatMonitoringButton.children[1].innerHTML = chatOnIcon;
     const chat = document.querySelector(
       `div[aria-label='Messages in conversation titled ${conversationName}']`
-    );
+    ) as HTMLDivElement;
     if (chat) {
       chatObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
+          console.log("mutation", mutation);
           if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
             const div = mutation.addedNodes[0] as HTMLDivElement;
             const messageContainer = div.querySelector("div.html-div");
-            if (messageContainer && messageContainer?.childNodes?.length > 3) {
-              const receivedMessage = messageContainer.textContent;
+            console.log("messageContainer", messageContainer);
+            const parent = messageContainer?.parentElement;
+            if (
+              parent &&
+              parent.childNodes.length > 1 &&
+              parent?.children[1].childNodes.length > 3
+            ) {
+              console.log("found parent", parent);
+              const messageLine = parent.childNodes[1];
+              if (messageLine.childNodes.length <= 1) {
+                return;
+              }
+
+              const receivedMessage = messageLine.childNodes[1].textContent;
+              console.log(receivedMessage);
               if (receivedMessage) {
                 sendLog({
                   content: receivedMessage,
                   timeReceived: new Date().toISOString(),
                 });
               }
+              enterMessage(receivedMessage || "");
+              setTimeout(() => {
+                sendMessage();
+              }, 100);
+              return;
+            }
+
+            if (messageContainer && messageContainer?.childNodes?.length > 2) {
+              const receivedMessage = messageContainer.textContent;
+              console.log(receivedMessage);
+              if (receivedMessage) {
+                sendLog({
+                  content: receivedMessage,
+                  timeReceived: new Date().toISOString(),
+                });
+                enterMessage(receivedMessage);
+                setTimeout(() => {
+                  sendMessage();
+                }, 100);
+              }
             }
           }
         });
       });
-      chatObserver.observe(chat, { childList: true, subtree: true });
+      chatObserver.observe(chat?.parentElement as Node, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+      });
     }
   }
 });
+
+function enterMessage(message: string) {
+  const messageInput = document.querySelector("div[aria-label='Message']");
+  if (!messageInput) {
+    return;
+  }
+
+  messageInput.innerHTML = message;
+  messageInput.dispatchEvent(new Event("focus"));
+  messageInput.dispatchEvent(
+    new InputEvent("input", {
+      bubbles: true,
+      cancelable: true,
+      data: message,
+      inputType: "insertText",
+    })
+  );
+}
+
+function sendMessage() {
+  const messageInput = document.querySelector(
+    "div[aria-label='Message']"
+  ) as HTMLDivElement;
+  const event = new KeyboardEvent("keydown", {
+    bubbles: true,
+    cancelable: true,
+    key: "Enter",
+  });
+  messageInput.dispatchEvent(event);
+}
 
 videoMonitoringButton.addEventListener("click", () => {
   if (isMonitoring) {
