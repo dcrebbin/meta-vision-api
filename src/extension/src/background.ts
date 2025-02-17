@@ -108,9 +108,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         console.log("Response", response);
         const audioBlob = await response.blob();
-        const base64 = await audioBlob.arrayBuffer();
+        const arrayBuffer = await audioBlob.arrayBuffer();
         const base64Audio = btoa(
-          String.fromCharCode(...new Uint8Array(base64))
+          new Uint8Array(arrayBuffer).reduce(
+            (data, byte) => data + String.fromCharCode(byte),
+            ""
+          )
         );
         console.log("Audio Blob", audioBlob);
         sendResponse({ data: base64Audio });

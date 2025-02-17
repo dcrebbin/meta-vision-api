@@ -1,4 +1,4 @@
-import { takeAScreenshot } from "./agent";
+// import { takeAScreenshot } from "./agent";
 
 console.log("Meta Glasses Video Monitor extension loaded");
 
@@ -20,7 +20,7 @@ let widthCropping = isFullScreen ? 1150 : 300;
 let verticalCropping = isFullScreen ? 200 : 100;
 // Whether the screenshot button sends the image to the server or downloads it
 let screenshotButtonSendsToServer = true;
-let conversationName = "Perplexity";
+let conversationName = "ChatGPT";
 const onTheCallScreen = document.location.href.includes("groupcall/ROOM");
 const onTheConversationScreen = document.location.href.includes("messages/t/");
 
@@ -210,15 +210,13 @@ async function sendImage(base64Image: string) {
 }
 
 async function sendMessage(message: string) {
+  if (message == "audio.mp3") {
+    return;
+  }
   sendLog({
     content: message ?? "",
     timeReceived: new Date().toISOString(),
   });
-
-  if (conversationName.toLowerCase() === "scrapybara") {
-    await scrapybaraSendMessage();
-    return;
-  }
 
   const response = await chrome.runtime.sendMessage({
     action: "sendMessage",
@@ -234,16 +232,61 @@ async function sendMessage(message: string) {
     enterMessage(response.data);
     setTimeout(() => {
       sendMessageViaInput();
+      generateTts(response.data);
     }, 100);
   }
 }
 
+async function generateTts(message: string) {
+  console.log("Generating TTS");
+  const response = await chrome.runtime
+    .sendMessage({
+      action: "tts",
+      message: message,
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      return null;
+    });
+  console.log("Response", response);
+  const base64Audio = response?.data;
+  if (base64Audio) {
+    attachAudio(base64Audio);
+    setTimeout(() => {
+      sendMessageViaInput();
+    }, 300);
+  }
+}
+
+function attachAudio(audio: string) {
+  const fileInput = document.querySelector(
+    'input[type="file"]'
+  ) as HTMLInputElement;
+  if (!fileInput) {
+    return;
+  }
+  const binaryStr = atob(audio);
+  const len = binaryStr.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+
+  const blob = new Blob([bytes], { type: "audio/mpeg" });
+  const file = new File([blob], "audio.mp3", { type: "audio/mpeg" });
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+  fileInput.files = dataTransfer.files;
+
+  const event = new Event("change", { bubbles: true });
+  fileInput.dispatchEvent(event);
+}
+
 async function scrapybaraSendMessage() {
-  const base64Image = await takeAScreenshot();
-  await sendImage(base64Image);
-  setTimeout(() => {
-    sendMessageViaInput();
-  }, 500);
+  // await sendImage(base64Image);
+  // setTimeout(() => {
+  //   sendMessageViaInput();
+  // }, 500);
 }
 
 function enterMessage(message: string) {
