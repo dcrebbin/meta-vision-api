@@ -8,6 +8,42 @@ document.getElementById("popoutWindow")?.addEventListener("click", () => {
   });
 });
 
+chrome.storage.local.get(
+  ["scrapybaraApiKey", "perplexityApiKey", "openaiApiKey"],
+  (result) => {
+    if (document.getElementById("scrapybaraApiKey")) {
+      (document.getElementById("scrapybaraApiKey") as HTMLInputElement).value =
+        result.scrapybaraApiKey || "";
+    }
+    if (document.getElementById("perplexityApiKey")) {
+      (document.getElementById("perplexityApiKey") as HTMLInputElement).value =
+        result.perplexityApiKey || "";
+    }
+    if (document.getElementById("openaiApiKey")) {
+      (document.getElementById("openaiApiKey") as HTMLInputElement).value =
+        result.openaiApiKey || "";
+    }
+  }
+);
+
+document.getElementById("scrapybaraApiKey")?.addEventListener("change", (e) => {
+  chrome.storage.local.set({
+    scrapybaraApiKey: (e.target as HTMLInputElement).value,
+  });
+});
+
+document.getElementById("perplexityApiKey")?.addEventListener("change", (e) => {
+  chrome.storage.local.set({
+    perplexityApiKey: (e.target as HTMLInputElement).value,
+  });
+});
+
+document.getElementById("openaiApiKey")?.addEventListener("change", (e) => {
+  chrome.storage.local.set({
+    openaiApiKey: (e.target as HTMLInputElement).value,
+  });
+});
+
 function addDevLog(
   message: string,
   timeReceived: string,

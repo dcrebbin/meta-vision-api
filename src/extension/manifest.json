@@ -12,7 +12,8 @@
     "default_popup": "src/pages/popup/popup.html"
   },
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "storage"
   ],
   "content_scripts": [
     {

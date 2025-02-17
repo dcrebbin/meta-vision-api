@@ -9,6 +9,7 @@
         margin: 0;
         padding: 16px;
         background-color: #1c1e21;
+        min-height: 300px;
         color: white;
         font-family: system-ui, -apple-system, sans-serif;
       }
@@ -60,6 +61,21 @@
   </head>
   <body>
     <div id="app">
+      <h2 style="margin: 0;font-size: 16px;">Settings</h2>
+      <div style="display: flex; gap: 10px;flex-direction: column;">
+        <div>
+          <label for="scrapybaraApiKey">Scrapybara API Key</label>
+          <input type="text" id="scrapybaraApiKey" />
+        </div>
+        <div>
+          <label for="perplexityApiKey">Perplexity API Key</label>
+          <input type="text" id="perplexityApiKey" />
+        </div>
+        <div>
+          <label for="openaiApiKey">OpenAI API Key</label>
+          <input type="text" id="openaiApiKey" />
+        </div>
+      </div>
       <div id="top-bar">
         <h1>Meta Glasses Logs Viewer</h1>
         <div class="control-panel" style="padding: 4px;">
