@@ -16,6 +16,22 @@ function openAiRequest(message: string) {
   });
 }
 
+function openAiTtsRequest(message: string) {
+  return fetch("https://api.openai.com/v1/audio/speech", {
+    method: "POST",
+    body: JSON.stringify({
+      model: "tts-1",
+      input: message,
+      voice: "alloy",
+    }),
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "audio/mpeg",
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+    },
+  });
+}
+
 function perplexityRequest(message: string) {
   return fetch("https://api.perplexity.ai/chat/completions", {
     method: "POST",
@@ -82,6 +98,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     return true; // This is important! Keeps the message channel open
   }
+
+  if (request.action === "tts") {
+    console.log("tts");
+    openAiTtsRequest(request.message)
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        console.log("Response", response);
+        const audioBlob = await response.blob();
+        const base64 = await audioBlob.arrayBuffer();
+        const base64Audio = btoa(
+          String.fromCharCode(...new Uint8Array(base64))
+        );
+        console.log("Audio Blob", audioBlob);
+        sendResponse({ data: base64Audio });
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        sendResponse({ error: error.message });
+      });
+    return true;
+  }
+
   if (request.action === "sendMessage") {
     console.log("sending message");
 
