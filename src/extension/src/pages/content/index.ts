@@ -147,32 +147,26 @@ chatMonitoringButton.addEventListener("click", () => {
             if (!messageContainer) {
               return;
             }
-            if (messageContainer.style.background == "rgb(0, 132, 255)") {
-              console.log("messageContainer is blue");
-              return;
-            }
             const parent = messageContainer?.parentElement;
-            if (
-              parent &&
-              parent.childNodes.length > 1 &&
-              parent?.children[1].childNodes.length > 3
-            ) {
-              const messageLine = parent.childNodes[1];
-              if (messageLine.childNodes.length <= 1) {
-                return;
-              }
-              console.log("messageLine", messageLine);
-              const receivedMessage = messageLine.childNodes[1].textContent;
-              console.log("receivedMessage", receivedMessage);
-              sendMessage(receivedMessage ?? "");
+
+            const messageLine = parent?.childNodes[1];
+            if (!messageLine) {
               return;
             }
-
-            if (messageContainer && messageContainer?.childNodes?.length > 2) {
-              const receivedMessage = messageContainer.textContent;
-              console.log("messageContainer", messageContainer);
-              sendMessage(receivedMessage ?? "");
+            if (messageLine.childNodes.length <= 1) {
+              return;
             }
+            console.log("messageLine", messageLine);
+            if (
+              messageLine &&
+              messageLine?.previousSibling?.textContent == "You sent"
+            ) {
+              return;
+            }
+            const receivedMessage = messageLine.childNodes[1].textContent;
+            console.log("receivedMessage", receivedMessage);
+            sendMessage(receivedMessage ?? "");
+            return;
           }
         });
       });
@@ -230,9 +224,15 @@ async function sendMessage(message: string) {
       timeReceived: new Date().toISOString(),
     });
     enterMessage(response.data);
-    setTimeout(() => {
+    setTimeout(async () => {
       sendMessageViaInput();
-      generateTts(response.data);
+      const segments = response.data
+        .split(/(\p{Script=Han}+)/u)
+        .filter(Boolean);
+
+      for (const segment of segments) {
+        await generateTts(segment);
+      }
     }, 100);
   }
 }
