@@ -226,13 +226,14 @@ async function sendMessage(message: string) {
     enterMessage(response.data);
     setTimeout(async () => {
       sendMessageViaInput();
-      const segments = response.data
-        .split(/(\p{Script=Han}+)/u)
-        .filter(Boolean);
+      await generateTts(response.data);
+      // const segments = response.data
+      //   .split(/(\p{Script=Han}+)/u)
+      //   .filter(Boolean);
 
-      for (const segment of segments) {
-        await generateTts(segment);
-      }
+      // for (const segment of segments) {
+      //   await generateTts(segment);
+      // }
     }, 100);
   }
 }

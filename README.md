@@ -1,115 +1,80 @@
 # Meta Vision
 
-### Meta Glasses GPT4 Vision API Implementation
+### Meta Glasses Vision API Implementation
 
 This is a hacky way to integrate GPT4 Vision into the Meta Rayban Smart Glasses using voice commands.
 
-[Example Demonstration](https://www.youtube.com/watch?v=PiEDrcLCmew)
+Hey Meta send a photo to my food log: [Video Demo](https://www.youtube.com/watch?v=PiEDrcLCmew)
+
+Video Monitoring
+![](/video-example.png)
 
 Requirements:
 
 a) [Meta Rayban Smart Glasses](https://about.fb.com/news/2023/09/new-ray-ban-meta-smart-glasses/)
 
-b) [OpenAi Api Key](https://platform.openai.com/)
+b) [OpenAi/Perplexity/Claude Api Key](https://platform.openai.com/)
 
 c) Alternative Facebook/Messenger account
 
-d) [bun](https://bun.sh/)
+d) Chromium based browser
 
-### Setup
+## Hey Meta Send a Photo to **\_\_\_\_\_**
 
-#### Get the server up and running:
+Before we setup our chrome extension we're going to trick the Meta Glasses into allowing us to send a message to (nearly) any name e.g: "Hey Meta send a message to ChatGPT".
 
-1. Add a .env file with your OpenAi API key (example via `env.example`)
+### Tricking Meta
 
-2. Run `bun install`
+1. Create a messenger group chat with 2 other facebook accounts (the minimum amount allowed to create a group chat)
 
-3. Run `bun run dev`
+![](/tutorial/create-a-chat.png)
 
-4. Server should be up and running on PORT 3103
+2. Remove the account you're not going to use
+   ![](/tutorial/remove-member.png)
 
-#### Add the Messenger Chat Observer:
+3. Change the name of the chat
+   ![](/tutorial/change-chat-name.png)
 
-**WARNING**: bookmarklets are a slightly obscure and very hacky way to execute arbitrary javascript in your browser, before running **MAKE SURE** to check the code you're executing.
-The bookmarklet code is documented below in the section titled: **Bookmarklet Code Breakdown**
+4. Update the group chat photo (for a legit feel)
+   ![](/tutorial/change-photo.png)
 
-1. Login to [messenger.com](https://www.messenger.com) with an alternative messenger/facebook account (make sure you are friends with your main account that's logged into your meta view app)
+5. Set a nickname for your alt bot account
+   ![](/tutorial/edit-nickname.png)
 
-2. Copy and paste the code from `bookmarklet.js` and create a new bookmark in your browser with the URL as the code (alternatively import it as a bookmark)
+6. Go to the Meta view app within the communications section
+   ![](/tutorial/communications.jpeg)
 
-3. Click the newly created bookmark
+7. Go to Messenger and disconnect then reconnect your messenger account
+   ![](/tutorial/disconnect.jpeg)
 
-4. Upon success a dialog should appear with **Added Messenger Chat Observer**
+I believe this step resyncs all your latest chats and friends which then allows that Meta Glasses to become aware of your newly created group chat to allow for voice commands!
 
-#### Test the integration:
+### Chat Monitoring
 
-1. Make sure within the Meta View app that the messenger connection is connected to the appropriate main account
+1. On your alt account head to messenger.com or facebook.com/messages then open your newly created group chat
 
-2. Say `You: Hey Meta, send a photo to *name of alternative account*`
+2. Ensure the input (ChatGPT) matches the name of your group chat then start monitoring the chat
+   ![](/tutorial/chat-monitoring.png)
 
-3. `Meta: Send a photo to *name of alternative account*`
+3. With each new message request it will send it to your chosen provider (ChatGPT, Perplexity) and then respond to you with the output
 
-4. `You: Yes`
+4. It will then generate an audio clip of that output using OpenAI and send it back to you
 
-5. Upon receiving the new photo and sending it to GPT4 Vision the server should display the following logs:
+#### Examples
 
-```
-GPT4 Vision Request
-Sending request to GPT4 Vision
-Request Successful
-Saving data
-Reading stored data
-Creating new data file.
-Writing new data
-```
+All chats can be done via voice commands "Hey Meta send a message to \_\_\_" or by simply messaging the group chat.
 
-6. Open up `./public/data.json` to check the successful added data
+a) Asking ChatGPT to give translations (will split the audio to maintain the Chinese accent when speaking Chinese)
 
-ENJOY!
+![](/tutorial/chatgpt.jpeg)
 
-#### Bookmarklet Code Breakdown:
+b) Asking Perplexity about topical events
 
-```javascript
-javascript: (function (s) {
-  //This a bookmarklet that you can either import as a bookmark
-  //OR you can copy all the code and paste into the URL when making a new bookmark
-  //OR post in dev console
+![](/tutorial/perplexity.jpeg)
 
-  // This is designed to observe for any new photo messages that are sent in messenger and then to forward the image url to this projects REST api
+### Video Monitoring
 
-  const messages = document.getElementsByClassName(
-    "x78zum5 xdt5ytf x1iyjqo2 xs83m0k x1xzczws x6ikm8r x1rife3k x1n2onr6 xh8yej3"
-  )[1].childNodes[2];
-
-  // This is to find the messages container within messenger.com for the selected chat
-
-  // However, these obfuscated classes are subject to change and so this is likely to break in the near future
-
-  messages.removeEventListener("DOMNodeInserted", null);
-
-  // The utilization of DOMNodeInserted is very bad practice and will be deprecated in all browsers in the future
-
-  // Mutation observer should replace DOMNodeInserted
-  messages.addEventListener("DOMNodeInserted", async (event) => {
-    const imgSrc = event?.target?.getElementsByTagName("img")[1]?.src;
-    if (imgSrc) {
-      const res = await fetch("http://localhost:3103/api/gpt-4-vision", {
-        method: "POST",
-
-        //Facebook's image urls contains lots of properties that need to be perfectly preserved in order to view the image
-        body: JSON.stringify({ imageUrl: imgSrc }),
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = res.json();
-      console.log(data);
-    }
-  });
-  alert("Added Messenger Chat Observer");
-})();
-```
+TODO
 
 by [Devon Crebbin](https://github.com/dcrebbin)
 
