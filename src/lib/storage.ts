@@ -5,6 +5,8 @@ import { type WxtStorageItem, storage as browserStorage } from "#imports";
 export const StorageKey = {
   THEME: "local:theme",
   LOGS: "local:logs",
+  OPENAI_API_KEY: "local:openai_api_key",
+  OPENAI_MODEL: "local:openai_model",
 } as const;
 
 export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
@@ -16,6 +18,18 @@ const storage = {
   [StorageKey.LOGS]: browserStorage.defineItem<string[]>(StorageKey.LOGS, {
     fallback: [],
   }),
+  [StorageKey.OPENAI_API_KEY]: browserStorage.defineItem<string>(
+    StorageKey.OPENAI_API_KEY,
+    {
+      fallback: "",
+    }
+  ),
+  [StorageKey.OPENAI_MODEL]: browserStorage.defineItem<string>(
+    StorageKey.OPENAI_MODEL,
+    {
+      fallback: "gpt-4o-mini",
+    }
+  ),
 } as const;
 
 type Value<T extends StorageKey> = (typeof storage)[T] extends WxtStorageItem<

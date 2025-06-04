@@ -245,6 +245,18 @@ function attachAudio(audio: string) {
   fileInput.dispatchEvent(event);
 }
 
+function sendMessageViaInput() {
+  const messageInput = document.querySelector(
+    "div[aria-label='Message']"
+  ) as HTMLDivElement;
+  const event = new KeyboardEvent("keydown", {
+    bubbles: true,
+    cancelable: true,
+    key: "Enter",
+  });
+  messageInput.dispatchEvent(event);
+}
+
 async function scrapybaraSendMessage() {
   // await sendImage(base64Image);
   // setTimeout(() => {
