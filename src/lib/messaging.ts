@@ -41,14 +41,16 @@ export const Message = {
   OPEN_AI: "open-ai",
   ADD_LOG: "add-log",
   RECEIVE_LOG: "receive-log",
+  RECEIVE_MESSAGE: "receive-message",
 } as const;
 
 export type Message = (typeof Message)[keyof typeof Message];
 
 interface Messages {
-  [Message.OPEN_AI]: () => string | null;
+  [Message.OPEN_AI]: (message: string) => Promise<string>;
   [Message.ADD_LOG]: (message: string) => void;
   [Message.RECEIVE_LOG]: (message: Log) => void;
+  [Message.RECEIVE_MESSAGE]: (message: string) => void;
 }
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<Messages>();

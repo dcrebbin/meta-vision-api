@@ -1,9 +1,14 @@
 import { Button } from "@/components/ui/button";
 import ReactDOM from "react-dom/client";
-import { createShadowRootUi, defineContentScript, useState } from "#imports";
+import {
+  createShadowRootUi,
+  defineContentScript,
+  useEffect,
+  useState,
+} from "#imports";
 
 import "~/assets/styles/globals.css";
-import { Message, sendMessage } from "@/lib/messaging";
+import { Message, onMessage, sendMessage } from "@/lib/messaging";
 import { useSettingsStore } from "@/lib/store/settings.store";
 import { useSessionStore } from "@/lib/store/session.store";
 
@@ -43,11 +48,17 @@ const ContentScriptUI = () => {
           }
           const receivedMessage = messageLine.childNodes[1]?.textContent;
           console.log("receivedMessage", receivedMessage);
-
-          enterMessage(receivedMessage ?? "");
-          setTimeout(() => {
-            sendMessageViaInput();
-          }, 200);
+          if (receivedMessage && typeof receivedMessage === "string") {
+            const response = await sendMessage(
+              Message.OPEN_AI,
+              receivedMessage
+            );
+            console.log("response", response);
+            enterMessage(response);
+            setTimeout(() => {
+              sendMessageViaInput();
+            }, 200);
+          }
           return sendMessage(Message.ADD_LOG, receivedMessage ?? "");
         }
       });
