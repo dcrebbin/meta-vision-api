@@ -19,14 +19,13 @@ export async function openAiTtsRequest(message: string) {
   });
 
   const audioBlob = await response.blob();
-  const base64Audio = await new Promise<string>((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      resolve(base64String.split(",")[1] ?? "");
-    };
-    reader.readAsDataURL(audioBlob);
-  });
+  const arrayBuffer = await audioBlob.arrayBuffer();
+  const base64Audio = btoa(
+    new Uint8Array(arrayBuffer).reduce(
+      (data, byte) => data + String.fromCharCode(byte),
+      ""
+    )
+  );
 
   return base64Audio;
 }

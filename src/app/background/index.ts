@@ -30,7 +30,7 @@ onMessage(Message.AI_TTS, async (message) => {
 });
 
 onMessage(Message.AI_VISION, async (message) => {
-  const imageBlob = new Blob([message.data], { type: "image/png" });
+  const imageBlob = await fetch(message.data).then((res) => res.blob());
   const response = await openAiVisionRequest(imageBlob);
   return response;
 });

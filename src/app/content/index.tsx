@@ -1,4 +1,9 @@
-import { createShadowRootUi, defineContentScript } from "#imports";
+import {
+  createShadowRootUi,
+  defineContentScript,
+  useEffect,
+  useRef,
+} from "#imports";
 import { Button } from "@/components/ui/button";
 import ReactDOM from "react-dom/client";
 
@@ -14,6 +19,42 @@ const ContentScriptUI = () => {
   const onTheConversationScreen =
     document.location.href.includes("messages/t/");
 
+  const threadList = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (onTheConversationScreen) {
+      const findAndHideThreadList = () => {
+        const threadListElement = document.querySelector(
+          "div[aria-label='Thread list']"
+        ) as HTMLDivElement;
+
+        if (threadListElement) {
+          threadList.current = threadListElement;
+          threadList.current.style.display = "none";
+        }
+      };
+
+      // Initial check
+      findAndHideThreadList();
+
+      // Set up observer to handle dynamic loading
+      const observer = new MutationObserver(() => {
+        findAndHideThreadList();
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      return () => {
+        observer.disconnect();
+        if (threadList.current) {
+          threadList.current.style.display = "block";
+        }
+      };
+    }
+  }, [onTheConversationScreen]);
+
   function startChatMonitoring() {
     setSession({ ...session, isMonitoring: true });
     const newChatObserver = new MutationObserver((mutations) => {
@@ -28,8 +69,8 @@ const ContentScriptUI = () => {
           }
           const parent = messageContainer?.parentElement;
 
-          const messageLine = parent?.childNodes[1];
-          if (!messageLine) {
+          const messageLine = parent?.childNodes[1] as HTMLDivElement;
+          if (!messageLine || messageLine.dataset.processed) {
             return;
           }
           if (messageLine.childNodes.length <= 1) {
@@ -41,18 +82,44 @@ const ContentScriptUI = () => {
           ) {
             return;
           }
+          messageLine.dataset.processed = "true";
           const receivedMessage = messageLine.childNodes[1]?.textContent;
+          const messageIsAnImage = messageLine.querySelector(
+            "img[alt='Open photo']"
+          );
+          if (messageIsAnImage) {
+            const imageUrl = (messageIsAnImage as HTMLImageElement).src;
+            if (imageUrl) {
+              console.log("imageUrl", imageUrl);
+              sendImageToServer(imageUrl);
+              return;
+            }
+            return;
+          }
           console.log("receivedMessage", receivedMessage);
           if (receivedMessage && typeof receivedMessage === "string") {
-            const response = await sendMessage(
-              Message.AI_CHAT,
-              receivedMessage
-            );
-            console.log("response", response);
-            enterMessage(response);
-            setTimeout(() => {
-              sendMessageViaInput();
-            }, 200);
+            if (settings.responseType === "chat") {
+              const response = await sendMessage(
+                Message.AI_CHAT,
+                receivedMessage
+              );
+              console.log("response", response);
+              enterMessage(response);
+              setTimeout(() => {
+                sendMessageViaInput();
+              }, 200);
+            }
+            if (settings.responseType === "tts") {
+              const response = await sendMessage(
+                Message.AI_TTS,
+                receivedMessage
+              );
+              console.log("response", response);
+              attachAudio(response);
+              setTimeout(() => {
+                sendMessageViaInput();
+              }, 200);
+            }
           }
           return sendMessage(Message.ADD_LOG, receivedMessage ?? "");
         }
@@ -83,6 +150,31 @@ const ContentScriptUI = () => {
     });
   }
 
+  async function sendImage(base64Image: string) {
+    const fileInput = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    if (!fileInput) {
+      return;
+    }
+    // Convert base64 to binary
+    const binaryStr = atob(base64Image);
+    const len = binaryStr.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+
+    const blob = new Blob([bytes], { type: "image/png" });
+    const file = new File([blob], "screenshot.png", { type: "image/png" });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+
+    const event = new Event("change", { bubbles: true });
+    fileInput.dispatchEvent(event);
+  }
+
   function downloadImage(imageUrl: string) {
     const a = document.createElement("a");
     a.href = imageUrl;
@@ -91,10 +183,12 @@ const ContentScriptUI = () => {
   }
 
   async function sendImageToServer(imageUrl: string) {
-    const response = (await chrome.runtime.sendMessage({
-      action: "takeScreenshot",
-      imageUrl,
-    })) as { data: { content: string; timeReceived: string } };
+    const response = await sendMessage(Message.AI_VISION, imageUrl);
+    console.log("response", response);
+    enterMessage(response);
+    setTimeout(() => {
+      sendMessageViaInput();
+    }, 200);
   }
 
   async function takeAndSendScreenshot(sendToServer: boolean = true) {
@@ -173,14 +267,14 @@ const ContentScriptUI = () => {
     }
   }
 
-  function attachAudio(audio: string) {
+  function attachAudio(base64Audio: string) {
     const fileInput = document.querySelector(
       'input[type="file"]'
     ) as HTMLInputElement;
     if (!fileInput) {
       return;
     }
-    const binaryStr = atob(audio);
+    const binaryStr = atob(base64Audio);
     const len = binaryStr.length;
     const bytes = new Uint8Array(len);
     for (let i = 0; i < len; i++) {
@@ -231,6 +325,17 @@ const ContentScriptUI = () => {
     <div className="flex font-mono h-[40px] flex-row gap-2 justify-end items-end px-4">
       {onTheConversationScreen && (
         <div className="flex flex-row gap-2 w-full items-center justify-center">
+          <div className="fixed m-4 right-0 top-0 flex w-[200px] flex-col gap-2 bg-black p-2 rounded-md">
+            <p className="text-xs font-bold text-white">Conversation Name</p>
+            <input
+              className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white"
+              type="text"
+              value={session.conversationName}
+              onChange={(e) =>
+                setSession({ ...session, conversationName: e.target.value })
+              }
+            />
+          </div>
           <Button
             onClick={() =>
               session.isMonitoring
@@ -242,16 +347,22 @@ const ContentScriptUI = () => {
               ? "Stop Chat Monitoring"
               : "Start Chat Monitoring"}
           </Button>
-          <div className="flex w-[200px] flex-col gap-2 bg-black p-2 rounded-md">
-            <p className="text-xs font-bold text-white">Conversation Name</p>
-            <input
+
+          <div className="w-[150px] flex flex-row gap-2 items-center bg-black p-2 rounded-md">
+            <p className="text-xs font-bold text-white">Response Type</p>
+            <select
               className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white"
-              type="text"
-              value={session.conversationName}
-              onChange={(e) =>
-                setSession({ ...session, conversationName: e.target.value })
-              }
-            />
+              value={settings.responseType}
+              onChange={(e) => {
+                setSettings({
+                  ...settings,
+                  responseType: e.target.value as "chat" | "tts",
+                });
+              }}
+            >
+              <option value="chat">Chat</option>
+              <option value="tts">TTS</option>
+            </select>
           </div>
         </div>
       )}
