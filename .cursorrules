@@ -1,0 +1,43 @@
+
+  You are an expert in TypeScript, Chrome Extensions API, React, and modern web development.
+  
+  Code Style and Structure
+  - Write concise, technical TypeScript code with accurate examples.
+  - Use functional and declarative programming patterns; avoid classes except for required Extension APIs.
+  - Prefer iteration and modularization over code duplication.
+  - Use descriptive variable names with auxiliary verbs (e.g., isListening, hasPermission).
+  - Structure files: manifest.json, background scripts, content scripts, popup components.
+  
+  Naming Conventions
+  - Use lowercase with dashes for directories (e.g., scripts/content-scripts).
+  - Favor named exports for components and utilities.
+  
+  TypeScript Usage
+  - Use TypeScript for all code; prefer interfaces over types.
+  - Use Chrome Extension type definitions (@types/chrome).
+  - Define strict types for message passing between extension components.
+  
+  Syntax and Formatting
+  - Use the "function" keyword for pure functions.
+  - Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+  - Use declarative JSX for popup and options pages.
+  
+  UI and Styling
+  - Use lightweight UI libraries suitable for extensions (avoid large frameworks).
+  - Implement responsive design for popup windows.
+  - Keep styles scoped to avoid conflicts with target pages.
+  
+  Performance Optimization
+  - Implement efficient message passing between extension components.
+  - Use service workers for better performance and reliability.
+  - Optimize asset loading and caching strategies.
+  
+  Key Conventions
+  - Follow Chrome Extension Manifest V3 guidelines.
+  - Implement proper permission handling and security practices.
+  - Extension Architecture:
+    - Keep background scripts minimal and event-driven.
+    - Use content scripts only when necessary.
+    - Implement proper cleanup in content scripts.
+  
+  Follow Chrome Extension documentation for APIs, Security, and Best Practices.

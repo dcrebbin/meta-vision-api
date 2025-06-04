@@ -13,11 +13,19 @@ Requirements:
 
 a) [Meta Rayban Smart Glasses](https://about.fb.com/news/2023/09/new-ray-ban-meta-smart-glasses/)
 
-b) [OpenAi/Perplexity/Claude Api Key](https://platform.openai.com/)
+b) [OpenAI/Perplexity/Claude Api Key](https://platform.openai.com/)
 
 c) Alternative Facebook/Messenger account
 
 d) Chromium based browser
+
+e) Bun 
+
+# Chrome Extension
+
+1. bun install 
+
+2. 
 
 ## Hey Meta Send a Photo to **\_\_\_\_\_**
 
