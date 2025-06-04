@@ -60,13 +60,12 @@ const LayoutContent = ({
     >
       <div
         className={cn(
-          "flex w-full max-w-[80rem] grow flex-col items-center justify-between gap-12 p-5",
+          "flex w-full max-w-[80rem] grow flex-col items-center justify-baseline gap-2 p-5",
           className
         )}
       >
         <Header />
         {children}
-        <Footer />
       </div>
       <Toaster />
     </div>

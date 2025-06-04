@@ -15,7 +15,7 @@ export default defineConfig({
   outDir: "build",
   modules: ["@wxt-dev/module-react", "@wxt-dev/auto-icons"],
   imports: false,
-  runner: {
+  webExt: {
     binaries: {
       brave:
         process.platform === "win32"
