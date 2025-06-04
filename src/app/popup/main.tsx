@@ -1,6 +1,9 @@
 import { Layout } from "@/components/layout/layout";
+import { onMessage } from "@/lib/messaging";
+import { Message } from "@/lib/messaging";
+import { useQuery } from "@tanstack/react-query";
 import { ListCollapse, SettingsIcon } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 
 const Popup = () => {
@@ -68,11 +71,32 @@ const Popup = () => {
 };
 
 const Logs = () => {
+  const [receivedLogs, setReceivedLogs] = useState<string[]>([]);
+
+  useQuery<string[]>({
+    queryKey: ["logs"],
+    queryFn: async () => {
+      return new Promise<string[]>((resolve) => {
+        onMessage(Message.RECEIVE_LOG, (message: { data: string }) => {
+          setReceivedLogs((prev) => [...prev, message.data]);
+          resolve(receivedLogs);
+        });
+      });
+    },
+    initialData: [],
+  });
+
   return (
     <div
       className="flex flex-col gap-3 w-full min-h-[70vh] overflow-y-auto"
       id="logs-container"
-    ></div>
+    >
+      <div id="logs-container">
+        {receivedLogs?.map((log) => (
+          <div key={log}>{log}</div>
+        ))}
+      </div>
+    </div>
   );
 };
 

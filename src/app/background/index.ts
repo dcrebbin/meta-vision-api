@@ -1,5 +1,5 @@
 import { StorageKey, getStorage } from "@/lib/storage";
-import { Message, onMessage } from "~/lib/messaging";
+import { Message, onMessage, sendMessage } from "~/lib/messaging";
 import { defineBackground } from "#imports";
 
 const main = () => {
@@ -12,6 +12,11 @@ const main = () => {
 //   const storage = getStorage(StorageKey.USER);
 //   return storage.getValue();
 // });
+
+onMessage(Message.ADD_LOG, (message) => {
+  console.log("Add Log", message);
+  sendMessage(Message.RECEIVE_LOG, message.data);
+});
 
 onMessage(Message.OPEN_AI, (message) => {
   console.log("Open AI", message);

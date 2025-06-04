@@ -136,44 +136,6 @@ chatMonitoringButton.addEventListener("click", () => {
       `div[aria-label='Messages in conversation titled ${conversationName}']`
     ) as HTMLDivElement;
     if (chat) {
-      chatObserver = new MutationObserver((mutations) => {
-        mutations.forEach(async (mutation) => {
-          if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-            const div = mutation.addedNodes[0] as HTMLDivElement;
-            console.log("div", div);
-            const messageContainer = div.querySelector(
-              "div.html-div"
-            ) as HTMLDivElement;
-            if (!messageContainer) {
-              return;
-            }
-            const parent = messageContainer?.parentElement;
-
-            const messageLine = parent?.childNodes[1];
-            if (!messageLine) {
-              return;
-            }
-            if (messageLine.childNodes.length <= 1) {
-              return;
-            }
-            console.log("messageLine", messageLine);
-            if (
-              messageLine &&
-              messageLine?.previousSibling?.textContent == "You sent"
-            ) {
-              return;
-            }
-            const receivedMessage = messageLine.childNodes[1].textContent;
-            console.log("receivedMessage", receivedMessage);
-            sendMessage(receivedMessage ?? "");
-            return;
-          }
-        });
-      });
-      chatObserver.observe(chat as Node, {
-        childList: true,
-        subtree: true,
-      });
     }
   }
 });
