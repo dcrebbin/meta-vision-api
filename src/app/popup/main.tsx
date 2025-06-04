@@ -1,12 +1,15 @@
 import { Layout } from "@/components/layout/layout";
-import { Log, onMessage } from "@/lib/messaging";
-import { Message } from "@/lib/messaging";
+import { Log, Message, onMessage } from "@/lib/messaging";
 import { StorageKey, useStorage } from "@/lib/storage";
-import { useQuery } from "@tanstack/react-query";
+import {
+  getStorageKey,
+  getStorageModel,
+  providerToModels,
+  providerToTitle,
+} from "@/lib/utils";
 import { ListCollapse, SettingsIcon } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
-import { WxtStorageItem } from "wxt/utils/storage";
 
 const Popup = () => {
   const [activeTab, setActiveTab] = useState("logs");
@@ -130,14 +133,8 @@ const Logs = () => {
   );
 };
 
-const ProviderSetting = ({
-  provider,
-  value,
-}: {
-  provider: string;
-  value: string;
-}) => {
-  const storageApiKey = useStorage(StorageKey.OPENAI_API_KEY);
+const ProviderSetting = ({ provider }: { provider: string }) => {
+  const storageApiKey = useStorage(getStorageKey(provider) as StorageKey);
   return (
     <div className="flex flex-col gap-2.5 w-full">
       <label className="text-xs font-bold text-white" htmlFor={provider}>
@@ -147,7 +144,7 @@ const ProviderSetting = ({
         className="w-full p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a]"
         type="password"
         id={provider}
-        value={value}
+        value={storageApiKey.data ?? ""}
         onChange={(e) => {
           storageApiKey.set(e.target.value);
         }}
@@ -156,28 +153,8 @@ const ProviderSetting = ({
   );
 };
 
-const providerToTitle = {
-  openai: "OpenAI",
-};
-
-const providerToModels = {
-  openai: [
-    {
-      title: "GPT-4o-mini",
-      value: "gpt-4o-mini",
-    },
-    { title: "GPT-4o", value: "gpt-4o" },
-  ],
-};
-
-const ProviderModel = ({
-  provider,
-  value,
-}: {
-  provider: string;
-  value: string;
-}) => {
-  const storageModel = useStorage(StorageKey.OPENAI_MODEL);
+const ProviderModel = ({ provider }: { provider: string }) => {
+  const storageModel = useStorage(getStorageModel(provider) as StorageKey);
   return (
     <div className="flex flex-col gap-2.5 w-full">
       <label className="text-xs font-bold text-white" htmlFor={provider}>
@@ -185,7 +162,7 @@ const ProviderModel = ({
       </label>
       <select
         className="w-full p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a]"
-        value={value}
+        value={storageModel.data ?? ""}
         onChange={(e) => {
           storageModel.set(e.target.value as string);
         }}
@@ -203,13 +180,14 @@ const ProviderModel = ({
 };
 
 const Settings = () => {
-  const openaiApiKey = useStorage(StorageKey.OPENAI_API_KEY);
-  const openaiModel = useStorage(StorageKey.OPENAI_MODEL);
-
   return (
     <div className="flex flex-col gap-3 w-full h-full min-h-[70vh]">
-      <ProviderSetting provider="openai" value={openaiApiKey.data ?? ""} />
-      <ProviderModel provider="openai" value={openaiModel.data ?? ""} />
+      {Object.keys(providerToTitle).map((provider) => (
+        <div key={provider}>
+          <ProviderSetting provider={provider} />
+          <ProviderModel provider={provider} />
+        </div>
+      ))}
     </div>
   );
 };

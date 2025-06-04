@@ -38,7 +38,9 @@ export class Log {
 }
 
 export const Message = {
-  OPEN_AI: "open-ai",
+  AI_CHAT: "ai-chat",
+  AI_TTS: "ai-tts",
+  AI_VISION: "ai-vision",
   ADD_LOG: "add-log",
   RECEIVE_LOG: "receive-log",
   RECEIVE_MESSAGE: "receive-message",
@@ -47,7 +49,9 @@ export const Message = {
 export type Message = (typeof Message)[keyof typeof Message];
 
 interface Messages {
-  [Message.OPEN_AI]: (message: string) => Promise<string>;
+  [Message.AI_CHAT]: (message: string) => Promise<string>;
+  [Message.AI_TTS]: (message: string) => Promise<string>;
+  [Message.AI_VISION]: (message: string) => Promise<string>;
   [Message.ADD_LOG]: (message: string) => void;
   [Message.RECEIVE_LOG]: (message: Log) => void;
   [Message.RECEIVE_MESSAGE]: (message: string) => void;
