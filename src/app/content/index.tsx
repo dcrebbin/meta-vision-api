@@ -10,6 +10,9 @@ import { useSessionStore } from "@/lib/store/session.store";
 const ContentScriptUI = () => {
   const { session, setSession } = useSessionStore();
   const { settings, setSettings } = useSettingsStore();
+  const onTheCallScreen = document.location.href.includes("groupcall/ROOM");
+  const onTheConversationScreen =
+    document.location.href.includes("messages/t/");
 
   function startChatMonitoring() {
     setSession({ ...session, isMonitoring: true });
@@ -40,6 +43,11 @@ const ContentScriptUI = () => {
           }
           const receivedMessage = messageLine.childNodes[1]?.textContent;
           console.log("receivedMessage", receivedMessage);
+
+          enterMessage(receivedMessage ?? "");
+          setTimeout(() => {
+            sendMessageViaInput();
+          }, 200);
           return sendMessage(Message.ADD_LOG, receivedMessage ?? "");
         }
       });
@@ -159,25 +167,100 @@ const ContentScriptUI = () => {
     }
   }
 
+  function attachAudio(audio: string) {
+    const fileInput = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    if (!fileInput) {
+      return;
+    }
+    const binaryStr = atob(audio);
+    const len = binaryStr.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+
+    const blob = new Blob([bytes], { type: "audio/mpeg" });
+    const file = new File([blob], "audio.mp3", { type: "audio/mpeg" });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+
+    const event = new Event("change", { bubbles: true });
+    fileInput.dispatchEvent(event);
+  }
+
+  function sendMessageViaInput() {
+    const messageInput = document.querySelector(
+      "div[aria-label='Message']"
+    ) as HTMLDivElement;
+    const event = new KeyboardEvent("keydown", {
+      bubbles: true,
+      cancelable: true,
+      key: "Enter",
+    });
+    messageInput.dispatchEvent(event);
+  }
+
+  function enterMessage(message: string) {
+    const messageInput = document.querySelector("div[aria-label='Message']");
+    if (!messageInput) {
+      return;
+    }
+
+    messageInput.innerHTML = message;
+    messageInput.dispatchEvent(new Event("focus"));
+    messageInput.dispatchEvent(
+      new InputEvent("input", {
+        bubbles: true,
+        cancelable: true,
+        data: message,
+        inputType: "insertText",
+      })
+    );
+  }
+
   return (
-    <div className="flex flex-row gap-2">
-      <Button
-        onClick={() =>
-          session.isMonitoring ? stopChatMonitoring() : startChatMonitoring()
-        }
-      >
-        {session.isMonitoring
-          ? "Stop Chat Monitoring"
-          : "Start Chat Monitoring"}
-      </Button>
-      <Button onClick={() => takeAndSendScreenshot(false)}>
-        Take and Send Screenshot
-      </Button>
-      <Button onClick={() => requestDisplayPermission()}>
-        {session.isPermissionGranted
-          ? "Permissions Granted"
-          : "Request Display Permission"}
-      </Button>
+    <div className="flex font-mono h-[40px] flex-row gap-2 justify-end items-end px-4">
+      {onTheConversationScreen && (
+        <div className="flex flex-row gap-2 w-full items-center justify-center">
+          <Button
+            onClick={() =>
+              session.isMonitoring
+                ? stopChatMonitoring()
+                : startChatMonitoring()
+            }
+          >
+            {session.isMonitoring
+              ? "Stop Chat Monitoring"
+              : "Start Chat Monitoring"}
+          </Button>
+          <div className="flex w-[200px] flex-col gap-2 bg-black p-2 rounded-md">
+            <p className="text-xs font-bold text-white">Conversation Name</p>
+            <input
+              className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white"
+              type="text"
+              value={session.conversationName}
+              onChange={(e) =>
+                setSession({ ...session, conversationName: e.target.value })
+              }
+            />
+          </div>
+        </div>
+      )}
+      {onTheCallScreen && (
+        <div className="flex flex-row gap-2">
+          <Button onClick={() => takeAndSendScreenshot(false)}>
+            Take and Send Screenshot
+          </Button>
+          <Button onClick={() => requestDisplayPermission()}>
+            {session.isPermissionGranted
+              ? "Permissions Granted"
+              : "Request Display Permission"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
