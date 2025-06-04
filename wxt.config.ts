@@ -15,8 +15,22 @@ export default defineConfig({
   outDir: "build",
   modules: ["@wxt-dev/module-react", "@wxt-dev/auto-icons"],
   imports: false,
+  runner: {
+    binaries: {
+      brave:
+        process.platform === "win32"
+          ? "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe"
+          : "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+    },
+  },
   vite: () =>
     ({
       plugins: [svgr(), tailwindcss()],
-    }) as WxtViteConfig,
+      server: {
+        hmr: true,
+      },
+      build: {
+        sourcemap: process.env.NODE_ENV === "development",
+      },
+    } as WxtViteConfig),
 });

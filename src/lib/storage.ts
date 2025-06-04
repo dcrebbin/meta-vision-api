@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Theme, type User } from "~/types";
+import { Theme } from "~/types";
 import { type WxtStorageItem, storage as browserStorage } from "#imports";
 
 export const StorageKey = {
   THEME: "local:theme",
-  USER: "local:user",
 } as const;
 
 export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
@@ -12,9 +11,6 @@ export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
 const storage = {
   [StorageKey.THEME]: browserStorage.defineItem<Theme>(StorageKey.THEME, {
     fallback: Theme.SYSTEM,
-  }),
-  [StorageKey.USER]: browserStorage.defineItem<User | null>(StorageKey.USER, {
-    fallback: null,
   }),
 } as const;
 
