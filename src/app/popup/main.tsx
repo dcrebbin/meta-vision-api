@@ -1,9 +1,10 @@
 import { Layout } from "@/components/layout/layout";
-import { onMessage } from "@/lib/messaging";
+import { Log, onMessage } from "@/lib/messaging";
 import { Message } from "@/lib/messaging";
+import { StorageKey, useStorage } from "@/lib/storage";
 import { useQuery } from "@tanstack/react-query";
 import { ListCollapse, SettingsIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom/client";
 
 const Popup = () => {
@@ -71,29 +72,57 @@ const Popup = () => {
 };
 
 const Logs = () => {
-  const [receivedLogs, setReceivedLogs] = useState<string[]>([]);
+  const storage = useStorage(StorageKey.LOGS);
+  const [receivedLogs, setReceivedLogs] = useState<Log[]>([]);
+  useEffect(() => {
+    const parsedLogs = Log.fromJSON(JSON.stringify(storage.data));
 
-  useQuery<string[]>({
-    queryKey: ["logs"],
-    queryFn: async () => {
-      return new Promise<string[]>((resolve) => {
-        onMessage(Message.RECEIVE_LOG, (message: { data: string }) => {
-          setReceivedLogs((prev) => [...prev, message.data]);
-          resolve(receivedLogs);
-        });
-      });
-    },
-    initialData: [],
-  });
+    console.log(parsedLogs);
+    try {
+      setReceivedLogs(parsedLogs);
+    } catch (error) {
+      console.error(error);
+    }
+    const unsubscribe = onMessage(
+      Message.RECEIVE_LOG,
+      (message: { data: Log }) => {
+        const currentLogs = storage.data ?? "[]";
+        storage.set([...currentLogs, JSON.stringify(message.data)]);
+        setReceivedLogs((prev) => [...prev, message.data]);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [storage.data]);
 
   return (
     <div
       className="flex flex-col gap-3 w-full min-h-[70vh] overflow-y-auto"
       id="logs-container"
     >
+      <button
+        className="w-fit absolute bottom-0 left-0 m-2 p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a]"
+        onClick={() => {
+          storage.set([]);
+          setReceivedLogs([]);
+        }}
+      >
+        Clear Logs
+      </button>
       <div id="logs-container">
-        {receivedLogs?.map((log) => (
-          <div key={log}>{log}</div>
+        {receivedLogs?.map((log, index) => (
+          <div
+            key={index}
+            className="text-sm flex flex-col items-start justify-between w-full my-4"
+          >
+            <hr className="w-full border-gray-400" />
+            <p className="text-xs text-gray-400 font-mono">
+              {new Date(log.timestamp).toLocaleString()}
+            </p>
+            <p>{log.message}</p>
+          </div>
         ))}
       </div>
     </div>
