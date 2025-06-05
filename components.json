@@ -3,7 +3,7 @@
   "style": "default",
   "tailwind": {
     "css": "src/styles/globals.css",
-    "baseColor": "gray",
+    "baseColor": "blue",
     "cssVariables": true,
     "config": "tailwind.config.ts"
   },

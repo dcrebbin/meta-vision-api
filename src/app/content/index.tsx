@@ -12,6 +12,13 @@ import { useSessionStore } from "@/lib/store/session.store";
 import { useSettingsStore } from "@/lib/store/settings.store";
 import "~/assets/styles/globals.css";
 
+class ImageCapture {
+  constructor(track: MediaStreamTrack) {}
+  grabFrame(): Promise<ImageBitmap> {
+    return Promise.resolve(new ImageBitmap());
+  }
+}
+
 const ContentScriptUI = () => {
   const { session, setSession } = useSessionStore();
   const { settings, setSettings } = useSettingsStore();
@@ -32,11 +39,7 @@ const ContentScriptUI = () => {
           threadList.current.style.display = "none";
         }
       };
-
-      // Initial check
       findAndHideThreadList();
-
-      // Set up observer to handle dynamic loading
       const observer = new MutationObserver(() => {
         findAndHideThreadList();
       });
@@ -90,20 +93,18 @@ const ContentScriptUI = () => {
           if (messageIsAnImage) {
             const imageUrl = (messageIsAnImage as HTMLImageElement).src;
             if (imageUrl) {
-              console.log("imageUrl", imageUrl);
               sendImageToServer(imageUrl);
               return;
             }
             return;
           }
-          console.log("receivedMessage", receivedMessage);
           if (receivedMessage && typeof receivedMessage === "string") {
             if (settings.responseType === "chat") {
               const response = await sendMessage(
                 Message.AI_CHAT,
                 receivedMessage
               );
-              console.log("response", response);
+              sendMessage(Message.ADD_LOG, response);
               enterMessage(response);
               setTimeout(() => {
                 sendMessageViaInput();
@@ -114,7 +115,6 @@ const ContentScriptUI = () => {
                 Message.AI_TTS,
                 receivedMessage
               );
-              console.log("response", response);
               attachAudio(response);
               setTimeout(() => {
                 sendMessageViaInput();
@@ -157,7 +157,6 @@ const ContentScriptUI = () => {
     if (!fileInput) {
       return;
     }
-    // Convert base64 to binary
     const binaryStr = atob(base64Image);
     const len = binaryStr.length;
     const bytes = new Uint8Array(len);
@@ -184,7 +183,6 @@ const ContentScriptUI = () => {
 
   async function sendImageToServer(imageUrl: string) {
     const response = await sendMessage(Message.AI_VISION, imageUrl);
-    console.log("response", response);
     enterMessage(response);
     setTimeout(() => {
       sendMessageViaInput();
@@ -202,7 +200,6 @@ const ContentScriptUI = () => {
       return;
     }
 
-    // @ts-ignore
     const imageCapture = new ImageCapture(track);
     const bitmap = await imageCapture.grabFrame();
     const canvas = document.createElement("canvas");
@@ -224,10 +221,8 @@ const ContentScriptUI = () => {
       const image = new Image();
       image.onload = () => {
         const canvas = document.createElement("canvas");
-        // Crop 300px from each side (left and right) to estimate the size of the video call window in portrait mode
         const horizontalCrop = settings.widthCropping;
         canvas.width = image.width - horizontalCrop * 2;
-        // Reduce height by 200px to account for the bottom bottom bar and the url bar
         canvas.height = image.height - settings.verticalCropping * 2;
         const context = canvas.getContext("2d");
         if (context) {

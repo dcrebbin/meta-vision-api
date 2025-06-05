@@ -23,6 +23,9 @@ export default defineConfig({
           : "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
     },
   },
+  autoIcons: {
+    grayscaleOnDevelopment: false,
+  },
   vite: () =>
     ({
       plugins: [svgr(), tailwindcss()],
