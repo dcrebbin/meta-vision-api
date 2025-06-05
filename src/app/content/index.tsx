@@ -7,6 +7,11 @@ import {
 import { Button } from "@/components/ui/button";
 import ReactDOM from "react-dom/client";
 
+import {
+  providerToModels,
+  providerToTitle,
+  providerToTTSModels,
+} from "@/lib/constants";
 import { Message, sendMessage } from "@/lib/messaging";
 import { useSessionStore } from "@/lib/store/session.store";
 import { useSettingsStore } from "@/lib/store/settings.store";
@@ -99,23 +104,18 @@ const ContentScriptUI = () => {
             return;
           }
           if (receivedMessage && typeof receivedMessage === "string") {
-            if (settings.responseType === "chat") {
-              const response = await sendMessage(
-                Message.AI_CHAT,
-                receivedMessage
-              );
-              sendMessage(Message.ADD_LOG, response);
-              enterMessage(response);
-              setTimeout(() => {
-                sendMessageViaInput();
-              }, 200);
-            }
-            if (settings.responseType === "tts") {
-              const response = await sendMessage(
-                Message.AI_TTS,
-                receivedMessage
-              );
-              attachAudio(response);
+            const aiResponse = await sendMessage(
+              Message.AI_CHAT,
+              receivedMessage
+            );
+            sendMessage(Message.ADD_LOG, aiResponse);
+            enterMessage(aiResponse);
+            setTimeout(() => {
+              sendMessageViaInput();
+            }, 200);
+            if (settings.useTTS) {
+              const ttsResponse = await sendMessage(Message.AI_TTS, aiResponse);
+              attachAudio(ttsResponse);
               setTimeout(() => {
                 sendMessageViaInput();
               }, 200);
@@ -317,13 +317,15 @@ const ContentScriptUI = () => {
   }
 
   return (
-    <div className="flex font-mono h-[40px] flex-row gap-2 justify-end items-end px-4">
+    <div className="flex font-sans h-[40px] flex-row gap-2 justify-end items-end px-4">
       {onTheConversationScreen && (
         <div className="flex flex-row gap-2 w-full items-center justify-center">
           <div className="fixed m-4 right-0 top-0 flex w-[200px] flex-col gap-2 bg-black p-2 rounded-md">
-            <p className="text-xs font-bold text-white">Conversation Name</p>
+            <p className="text-xs font-bold text-white font-sans">
+              Conversation Name
+            </p>
             <input
-              className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white"
+              className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
               type="text"
               value={session.conversationName}
               onChange={(e) =>
@@ -331,34 +333,105 @@ const ContentScriptUI = () => {
               }
             />
           </div>
-          <Button
+          <button
+            className="w-36 rounded-md p-2 bg-black drop-shadow-md text-white h-12 flex flex-row gap-2 items-center font-sans"
             onClick={() =>
               session.isMonitoring
                 ? stopChatMonitoring()
                 : startChatMonitoring()
             }
           >
-            {session.isMonitoring
-              ? "Stop Chat Monitoring"
-              : "Start Chat Monitoring"}
-          </Button>
+            <p className="text-xs font-bold text-white w-full font-sans">
+              {session.isMonitoring
+                ? "Stop Chat Monitoring"
+                : "Start Chat Monitoring"}
+            </p>
+          </button>
 
-          <div className="w-[150px] flex flex-row gap-2 items-center bg-black p-2 rounded-md">
-            <p className="text-xs font-bold text-white">Response Type</p>
+          <div className="h-12 w-auto flex flex-row gap-2 items-center bg-black p-2 rounded-md">
+            <p className="text-xs font-bold text-white font-sans">Provider</p>
             <select
-              className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white"
-              value={settings.responseType}
+              className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
+              value={settings.provider ?? "openai"}
               onChange={(e) => {
                 setSettings({
                   ...settings,
-                  responseType: e.target.value as "chat" | "tts",
+                  provider: e.target.value as
+                    | "openai"
+                    | "anthropic"
+                    | "perplexity"
+                    | "google",
                 });
               }}
             >
-              <option value="chat">Chat</option>
-              <option value="tts">TTS</option>
+              {Object.keys(providerToTitle).map((provider) => (
+                <option key={provider} value={provider}>
+                  {providerToTitle[provider as keyof typeof providerToTitle]}
+                </option>
+              ))}
             </select>
           </div>
+          <div className="h-12 w-auto flex flex-row gap-2 items-center bg-black p-2 rounded-md">
+            <p className="text-xs font-bold text-white font-sans">Model</p>
+            <select
+              className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
+              value={settings.model.get(settings.provider) ?? "gpt-4o-mini"}
+              onChange={(e) => {
+                setSettings({
+                  ...settings,
+                  model: new Map([[settings.provider, e.target.value]]),
+                });
+              }}
+            >
+              {providerToModels[
+                settings.provider as keyof typeof providerToModels
+              ].map((model) => (
+                <option key={model.value} value={model.value}>
+                  {model.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="w-auto h-12 flex flex-row gap-2 items-center bg-black p-2 rounded-md">
+            <p className="text-xs font-bold text-white w-14 font-sans">
+              Use TTS
+            </p>
+            <input
+              type="checkbox"
+              checked={settings.useTTS}
+              onChange={(e) =>
+                setSettings({ ...settings, useTTS: e.target.checked })
+              }
+            />
+          </div>
+          {settings.useTTS && (
+            <div className="h-12 w-auto flex flex-row gap-2 items-center bg-black p-2 rounded-md">
+              <p className="text-xs font-bold text-white font-sans">
+                TTS Model
+              </p>
+              <select
+                className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
+                value={settings.ttsModel ?? "tts-1"}
+                onChange={(e) => {
+                  setSettings({
+                    ...settings,
+                    ttsModel: e.target.value,
+                  });
+                }}
+              >
+                {Object.keys(providerToTTSModels).map((ttsModel) => (
+                  <option key={ttsModel} value={ttsModel}>
+                    {
+                      providerToTTSModels[
+                        ttsModel as keyof typeof providerToTTSModels
+                      ].title
+                    }
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       )}
       {onTheCallScreen && (

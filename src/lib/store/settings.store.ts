@@ -6,7 +6,10 @@ interface SettingsStore {
     imageQuality: number;
     widthCropping: number;
     verticalCropping: number;
-    responseType: "chat" | "tts";
+    provider: "openai" | "anthropic" | "perplexity" | "google";
+    useTTS: boolean;
+    model: Map<string, string>;
+    ttsModel: string;
   };
   setSettings: (settings: SettingsStore["settings"]) => void;
 }
@@ -17,7 +20,16 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
     imageQuality: 0.5,
     widthCropping: 300,
     verticalCropping: 100,
-    responseType: "chat",
+    provider: "openai",
+    useTTS: false,
+    model: new Map([
+      ["openai", "gpt-4o-mini"],
+      ["anthropic", "claude-3-5-sonnet-20240620"],
+      ["perplexity", "sonar-pro"],
+      ["google", "gemini-2.0-flash"],
+    ]),
+    ttsProvider: "openai",
+    ttsModel: "tts-1",
   },
   setSettings: (settings) => set({ settings }),
 }));

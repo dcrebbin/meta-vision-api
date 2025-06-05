@@ -25,26 +25,3 @@ export function getStorageModel(provider: string): StorageKey | undefined {
       return StorageKey.ANTHROPIC_MODEL;
   }
 }
-
-export const providerToTitle = {
-  openai: "OpenAI",
-  perplexity: "Perplexity",
-  anthropic: "Anthropic",
-};
-
-export const providerToModels = {
-  openai: [
-    {
-      title: "GPT-4o-mini",
-      value: "gpt-4o-mini",
-    },
-    { title: "GPT-4o", value: "gpt-4o" },
-  ],
-  perplexity: [
-    { title: "Sonar Pro", value: "sonar-pro" },
-    { title: "Sonar", value: "sonar" },
-  ],
-  anthropic: [
-    { title: "Claude 3.5 Sonnet", value: "claude-3-5-sonnet-20240620" },
-  ],
-};
