@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import ReactDOM from "react-dom/client";
 
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   aiChatProviders,
   providerToModels,
   providerToTitle,
@@ -16,7 +22,7 @@ import {
 import { Message, sendMessage } from "@/lib/messaging";
 import { useSessionStore } from "@/lib/store/session.store";
 import { useSettingsStore } from "@/lib/store/settings.store";
-import { MessageCircle, MessageCircleX } from "lucide-react";
+import { Info, MessageCircle, MessageCircleX } from "lucide-react";
 import "~/assets/styles/globals.css";
 
 class ImageCapture {
@@ -65,8 +71,48 @@ const ContentScriptUI = () => {
     }
   }, [onTheConversationScreen]);
 
-  function startChatMonitoring() {
-    setSession({ ...session, isMonitoring: true });
+  const toolTips = {
+    chatProvider: "The AI provider to use for chat LLM responses.",
+    chatModel:
+      "The model to use for chat LLM responses specific to selected provider.",
+    ttsModel: "The model to use for text to speech if TTS is enabled.",
+    conversationName:
+      "The name of the conversation. Used to identify the conversation in the chat history via the DOM.",
+    takeAndSendScreenshot:
+      "Takes a screenshot of the current screen and sends it to the server for processing.",
+    requestDisplayPermission:
+      "Requests permission to access the display. This is required to take screenshots of the current screen.",
+  };
+
+  useEffect(() => {
+    if (session.isMonitoring) {
+      refreshChatObserver();
+    }
+  }, [settings.provider, settings.model, settings.useTTS]);
+
+  const chatProviderTooltip = (tooltipText: string) => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <Info className="w-4 h-4 cursor-pointer text-white" />
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{tooltipText}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+
+  const settingHeader = (title: string, tooltipText: string) => (
+    <div className="flex flex-row gap-2 items-center justify-between w-fit">
+      <p className="text-xs font-bold text-white font-sans flex flex-row gap-2 items-center">
+        {title}
+      </p>
+      {chatProviderTooltip(tooltipText)}
+    </div>
+  );
+
+  function observeChat(): MutationObserver {
     const newChatObserver = new MutationObserver((mutations) => {
       mutations.forEach(async (mutation) => {
         if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
@@ -106,19 +152,33 @@ const ContentScriptUI = () => {
             return;
           }
           if (receivedMessage && typeof receivedMessage === "string") {
+            sendMessage(Message.ADD_LOG, "Sending chat request");
+            sendMessage(Message.ADD_LOG, "TTS enabled: " + settings.useTTS);
+
+            console.log("settings", settings);
+
             const aiResponse = await sendMessage(
               Message.AI_CHAT,
               receivedMessage
             );
             sendMessage(Message.ADD_LOG, aiResponse);
             enterMessage(aiResponse);
-            setTimeout(() => {
+            void setTimeout(() => {
+              sendMessage(
+                Message.ADD_LOG,
+                `Provider: ${settings.provider} | Model: ${settings.model.get(
+                  settings.provider
+                )} | Message received: ${receivedMessage}`
+              );
               sendMessageViaInput();
             }, 200);
             if (settings.useTTS) {
+              sendMessage(Message.ADD_LOG, "Sending TTS request");
               const ttsResponse = await sendMessage(Message.AI_TTS, aiResponse);
+              sendMessage(Message.ADD_LOG, "TTS Response received: ");
               attachAudio(ttsResponse);
               setTimeout(() => {
+                sendMessage(Message.ADD_LOG, "Sending TTS response to user");
                 sendMessageViaInput();
               }, 200);
             }
@@ -136,6 +196,12 @@ const ContentScriptUI = () => {
         subtree: true,
       }
     );
+    return newChatObserver;
+  }
+
+  function startChatMonitoring() {
+    setSession({ ...session, isMonitoring: true });
+    const newChatObserver = observeChat();
     setSession({
       ...session,
       isMonitoring: true,
@@ -318,23 +384,36 @@ const ContentScriptUI = () => {
     );
   }
 
+  function refreshChatObserver() {
+    session.chatObserver?.disconnect();
+    session.chatObserver = observeChat();
+    setSession({
+      ...session,
+      chatObserver: session.chatObserver,
+    });
+  }
+
   const ttsSettings = (
     <div className="w-auto flex flex-col gap-2 items-start">
       <div className="flex flex-row gap-2 items-center justify-between w-full">
-        <p className="text-xs font-bold text-white font-sans">TTS Model</p>
+        {settingHeader("TTS Model", toolTips.ttsModel)}
         <div className="w-[1px] h-4 bg-white" />
         <p className="text-xs font-bold text-white w-14 font-sans">Use TTS</p>
         <input
+          className="cursor-pointer"
           type="checkbox"
           checked={settings.useTTS}
-          onChange={(e) =>
-            setSettings({ ...settings, useTTS: e.target.checked })
-          }
+          onChange={(e) => {
+            setSettings({
+              ...settings,
+              useTTS: e.target.checked,
+            });
+          }}
         />
       </div>
       <select
         disabled={!settings.useTTS}
-        className="rounded-md p-2 h-fit bg-gray-800 drop-shadow-md text-white font-sans disabled:opacity-50"
+        className="cursor-pointer disabled:cursor-not-allowed rounded-md p-2 h-fit bg-gray-800 drop-shadow-md text-white font-sans disabled:opacity-50"
         value={settings.ttsModel ?? "tts-1"}
         onChange={(e) => {
           setSettings({
@@ -363,9 +442,9 @@ const ContentScriptUI = () => {
 
   const chatProviderSettings = (
     <div className="w-auto flex flex-col gap-2 items-start rounded-md">
-      <p className="text-xs font-bold text-white font-sans">Provider</p>
+      {settingHeader("Provider", toolTips.chatProvider)}
       <select
-        className="rounded-md h-fit p-2 bg-gray-800 drop-shadow-md text-white font-sans"
+        className="cursor-pointer rounded-md h-fit p-2 bg-gray-800 drop-shadow-md text-white font-sans"
         value={settings.provider ?? "openai"}
         onChange={(e) => {
           setSettings({
@@ -389,9 +468,10 @@ const ContentScriptUI = () => {
 
   const chatModelSettings = (
     <div className="w-auto flex flex-col gap-2 items-start">
-      <p className="text-xs font-bold text-white font-sans">Model</p>
+      {settingHeader("Model", toolTips.chatModel)}
+
       <select
-        className="rounded-md h-auto p-2 bg-gray-800 drop-shadow-md text-white font-sans"
+        className="cursor-pointer rounded-md h-auto p-2 bg-gray-800 drop-shadow-md text-white font-sans"
         value={settings.model.get(settings.provider) ?? "gpt-4o-mini"}
         onChange={(e) => {
           setSettings({
@@ -413,11 +493,9 @@ const ContentScriptUI = () => {
 
   const conversationNameSettings = (
     <div className="fixed m-4 right-0 top-0 flex w-[200px] flex-col gap-2 bg-black p-2 rounded-md">
-      <p className="text-xs font-bold text-white font-sans">
-        Conversation Name
-      </p>
+      {settingHeader("Conversation Name", toolTips.conversationName)}
       <input
-        className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
+        className="cursor-pointer rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
         type="text"
         value={session.conversationName}
         onChange={(e) =>
