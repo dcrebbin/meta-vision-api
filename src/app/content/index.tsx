@@ -3,6 +3,7 @@ import {
   defineContentScript,
   useEffect,
   useRef,
+  useState,
 } from "#imports";
 import ReactDOM from "react-dom/client";
 
@@ -21,7 +22,15 @@ import {
 import { Message, sendMessage } from "@/lib/messaging";
 import { useSessionStore } from "@/lib/store/session.store";
 import { useSettingsStore } from "@/lib/store/settings.store";
-import { Check, Info, MessageCircle, MessageCircleX } from "lucide-react";
+import {
+  Info,
+  MessageCircle,
+  MessageCircleX,
+  MoveDownLeft,
+  MoveDownRight,
+  MoveUpLeft,
+  MoveUpRight,
+} from "lucide-react";
 import "~/assets/styles/globals.css";
 
 const ContentScriptUI = () => {
@@ -266,31 +275,44 @@ const ContentScriptUI = () => {
     }, 200);
   }
 
-  async function takeAndSendScreenshot(sendToServer: boolean = true) {
-    if (!session.stream || !session.isPermissionGranted) {
-      await requestDisplayPermission();
-    }
+  const [videoDimensions, setVideoDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
 
-    const track = session.stream?.getVideoTracks()[0];
-    if (!track) {
-      alert("No video tracks found");
+  async function takeAndSendScreenshot(sendToServer: boolean = true) {
+    const video = document.querySelector(
+      "video[style='display: block;']"
+    ) as HTMLVideoElement;
+    if (!video) {
       return;
     }
-
+    // @ts-expect-error - captureStream is not defined in the browser
+    const track = video.captureStream().getVideoTracks()[0];
+    if (!track) {
+      return;
+    }
     // @ts-expect-error - ImageCapture is not defined in the browser
     const imageCapture = new ImageCapture(track);
+    const settings = track.getSettings();
+    setVideoDimensions({
+      width: settings.width ?? 0,
+      height: settings.height ?? 0,
+    });
+    console.log("settings", settings);
     const bitmap = await imageCapture.grabFrame();
+    console.log("videoDimensions", videoDimensions);
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
     const context = canvas.getContext("2d");
     context?.drawImage(bitmap, 0, 0);
     const screenshot = canvas.toDataURL();
-    const croppedImage = await cropImage(screenshot);
+    // const croppedImage = await cropImage(screenshot);
     if (sendToServer) {
-      await sendImageToServer(croppedImage);
+      await sendImageToServer(screenshot);
     } else {
-      downloadImage(croppedImage);
+      downloadImage(screenshot);
     }
   }
 
@@ -325,26 +347,6 @@ const ContentScriptUI = () => {
       };
       image.src = imageUrl;
     });
-  }
-
-  async function requestDisplayPermission() {
-    const stream = await navigator.mediaDevices
-      .getDisplayMedia({
-        video: true,
-        audio: false,
-      })
-      .catch((err) => {
-        setSession({ ...session, isPermissionGranted: false });
-        console.error("Error requesting display permission", err);
-        return null;
-      });
-    if (stream) {
-      setSession({
-        ...session,
-        isPermissionGranted: true,
-        stream: stream,
-      });
-    }
   }
 
   function attachAudio(base64Audio: string) {
@@ -538,7 +540,7 @@ const ContentScriptUI = () => {
     </button>
   );
 
-  function startVideoMonitoring() {
+  async function startVideoMonitoring() {
     setSession({
       ...session,
       isVideoMonitoring: true,
@@ -560,62 +562,205 @@ const ContentScriptUI = () => {
     }
   }
 
+  const conversationScreenView = () => (
+    <div className="flex flex-col gap-2 w-full items-start justify-start">
+      {conversationNameSettings}
+      {monitoringButton}
+      <div className="flex flex-col gap-2 bg-black p-2 rounded-md drop-shadow-md">
+        <h1 className="text-xs font-bold text-white font-sans">Settings</h1>
+        <div className="flex flex-row w-full h-16 gap-2">
+          {chatProviderSettings()}
+          {chatModelSettings()}
+          {ttsSettings}
+        </div>
+      </div>
+    </div>
+  );
+
+  const CropOverlay = () => {
+    const [dimensions, setDimensions] = useState({
+      width: 844,
+      height: 475,
+      top: 100,
+      left: 100,
+    });
+
+    const [isDragging, setIsDragging] = useState(false);
+    const [activeHandle, setActiveHandle] = useState<number | "move" | null>(
+      null
+    );
+    const startDragPos = useRef({ x: 0, y: 0 });
+    const startDimensions = useRef({ width: 0, height: 0, top: 0, left: 0 });
+    const overlayRef = useRef<HTMLDivElement>(null);
+
+    const handleMouseDown = (
+      e: React.MouseEvent<HTMLDivElement>,
+      handle: number | "move"
+    ) => {
+      e.stopPropagation();
+      e.preventDefault();
+      setIsDragging(true);
+      setActiveHandle(handle);
+      startDragPos.current = { x: e.clientX, y: e.clientY };
+      startDimensions.current = { ...dimensions };
+    };
+
+    useEffect(() => {
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!isDragging || activeHandle === null) return;
+
+        let dx = e.clientX - startDragPos.current.x;
+        let dy = e.clientY - startDragPos.current.y;
+
+        const newDimensions = { ...startDimensions.current };
+
+        if (activeHandle === "move") {
+          newDimensions.left += dx;
+          newDimensions.top += dy;
+        } else if (activeHandle === 0) {
+          // Top-left
+          if (startDimensions.current.width - dx < 50) {
+            dx = startDimensions.current.width - 50;
+          }
+          if (startDimensions.current.height - dy < 50) {
+            dy = startDimensions.current.height - 50;
+          }
+          newDimensions.width -= dx;
+          newDimensions.height -= dy;
+          newDimensions.left += dx;
+          newDimensions.top += dy;
+        } else if (activeHandle === 1) {
+          // Top-right
+          if (startDimensions.current.width + dx < 50) {
+            dx = 50 - startDimensions.current.width;
+          }
+          if (startDimensions.current.height - dy < 50) {
+            dy = startDimensions.current.height - 50;
+          }
+          newDimensions.width += dx;
+          newDimensions.height -= dy;
+          newDimensions.top += dy;
+        } else if (activeHandle === 2) {
+          // Bottom-right
+          if (startDimensions.current.width + dx < 50) {
+            dx = 50 - startDimensions.current.width;
+          }
+          if (startDimensions.current.height + dy < 50) {
+            dy = 50 - startDimensions.current.height;
+          }
+          newDimensions.width += dx;
+          newDimensions.height += dy;
+        } else if (activeHandle === 3) {
+          // Bottom-left
+          if (startDimensions.current.width - dx < 50) {
+            dx = startDimensions.current.width - 50;
+          }
+          if (startDimensions.current.height + dy < 50) {
+            dy = 50 - startDimensions.current.height;
+          }
+          newDimensions.width -= dx;
+          newDimensions.height += dy;
+          newDimensions.left += dx;
+        }
+
+        setDimensions(newDimensions);
+      };
+
+      const handleMouseUp = () => {
+        setIsDragging(false);
+        setActiveHandle(null);
+      };
+
+      if (isDragging) {
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+      }
+
+      return () => {
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+      };
+    }, [isDragging, activeHandle]);
+
+    return (
+      <div
+        ref={overlayRef}
+        onMouseDown={(e) => {
+          if (e.target === overlayRef.current) {
+            handleMouseDown(e, "move");
+          }
+        }}
+        className="fixed border-2 border-dashed border-white cursor-grab text-white"
+        style={{
+          width: `${dimensions.width}px`,
+          height: `${dimensions.height}px`,
+          top: `${dimensions.top}px`,
+          left: `${dimensions.left}px`,
+          zIndex: 1000,
+        }}
+      >
+        <div
+          onMouseDown={(e) => handleMouseDown(e, 0)}
+          className="absolute top-0 left-0 w-10 h-10  flex items-center justify-center cursor-nwse-resize"
+        >
+          <MoveUpLeft />
+        </div>
+        <div
+          onMouseDown={(e) => handleMouseDown(e, 1)}
+          className="absolute top-0 right-0 w-10 h-10  flex items-center justify-center cursor-nesw-resize"
+        >
+          <MoveUpRight />
+        </div>
+        <div
+          onMouseDown={(e) => handleMouseDown(e, 2)}
+          className="absolute bottom-0 right-0 w-10 h-10 flex items-center justify-center cursor-nwse-resize"
+        >
+          <MoveDownRight />
+        </div>
+        <div
+          onMouseDown={(e) => handleMouseDown(e, 3)}
+          className="absolute bottom-0 left-0 w-10 h-10 flex items-center justify-center cursor-nesw-resize"
+        >
+          <MoveDownLeft />
+        </div>
+      </div>
+    );
+  };
+
+  const callScreenView = () => (
+    <div className="flex flex-col gap-2">
+      <CropOverlay />
+      <div className="flex flex-row gap-2">
+        <button
+          className="flex cursor-pointer items-center h-12 gap-2 rounded-md bg-white p-2 text-black drop-shadow-md font-sans"
+          onClick={() =>
+            session.isVideoMonitoring
+              ? stopVideoMonitoring()
+              : startVideoMonitoring()
+          }
+        >
+          {session.isVideoMonitoring
+            ? "Stop Monitoring Video"
+            : "Start Monitoring Video"}
+        </button>
+        <button
+          className="flex cursor-pointer items-center h-12 gap-2 rounded-md bg-white p-2 text-black drop-shadow-md font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => takeAndSendScreenshot(false)}
+        >
+          Take Screenshot
+        </button>
+      </div>
+      <div className="flex flex-row gap-2 bg-white p-2 rounded-md drop-shadow-md">
+        {chatProviderSettings(true)}
+        {chatModelSettings(true)}
+      </div>
+    </div>
+  );
+
   return (
     <div className="fixed bottom-0 flex flex-col gap-4 p-4">
-      {onTheConversationScreen && (
-        <div className="flex flex-col gap-2 w-full items-start justify-start">
-          {conversationNameSettings}
-          {monitoringButton}
-          <div className="flex flex-col gap-2 bg-black p-2 rounded-md drop-shadow-md">
-            <h1 className="text-xs font-bold text-white font-sans">Settings</h1>
-            <div className="flex flex-row w-full h-16 gap-2">
-              {chatProviderSettings()}
-              {chatModelSettings()}
-              {ttsSettings}
-            </div>
-          </div>
-        </div>
-      )}
-      {onTheCallScreen && (
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-row gap-2">
-            <button
-              className={`flex cursor-pointer items-center h-12 gap-2 rounded-md p-2 drop-shadow-md font-sans text-white ${
-                session.isPermissionGranted ? "bg-green-500" : "bg-red-500"
-              }`}
-              onClick={() => requestDisplayPermission()}
-            >
-              {session.isPermissionGranted
-                ? "Display Permissions Granted"
-                : "Request Display Permissions"}
-              {session.isPermissionGranted && <Check />}
-            </button>
-            <button
-              disabled={!session.isPermissionGranted}
-              className="flex cursor-pointer items-center h-12 gap-2 rounded-md bg-white p-2 text-black drop-shadow-md font-sans disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() =>
-                session.isVideoMonitoring
-                  ? stopVideoMonitoring()
-                  : startVideoMonitoring()
-              }
-            >
-              {session.isVideoMonitoring
-                ? "Stop Monitoring Video"
-                : "Start Monitoring Video"}
-            </button>
-            <button
-              className="flex cursor-pointer items-center h-12 gap-2 rounded-md bg-white p-2 text-black drop-shadow-md font-sans disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => takeAndSendScreenshot(false)}
-            >
-              Take Screenshot
-            </button>
-          </div>
-          <div className="flex flex-row gap-2 bg-white p-2 rounded-md drop-shadow-md">
-            {chatProviderSettings(true)}
-            {chatModelSettings(true)}
-          </div>
-        </div>
-      )}
+      {onTheConversationScreen && conversationScreenView()}
+      {onTheCallScreen && callScreenView()}
     </div>
   );
 };
