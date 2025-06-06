@@ -4,7 +4,6 @@ import {
   useEffect,
   useRef,
 } from "#imports";
-import { Button } from "@/components/ui/button";
 import ReactDOM from "react-dom/client";
 
 import {
@@ -22,15 +21,8 @@ import {
 import { Message, sendMessage } from "@/lib/messaging";
 import { useSessionStore } from "@/lib/store/session.store";
 import { useSettingsStore } from "@/lib/store/settings.store";
-import { Info, MessageCircle, MessageCircleX } from "lucide-react";
+import { Check, Info, MessageCircle, MessageCircleX } from "lucide-react";
 import "~/assets/styles/globals.css";
-
-class ImageCapture {
-  constructor(track: MediaStreamTrack) {}
-  grabFrame(): Promise<ImageBitmap> {
-    return Promise.resolve(new ImageBitmap());
-  }
-}
 
 const ContentScriptUI = () => {
   const { session, setSession } = useSessionStore();
@@ -72,9 +64,9 @@ const ContentScriptUI = () => {
   }, [onTheConversationScreen]);
 
   const toolTips = {
-    chatProvider: "The AI provider to use for chat LLM responses.",
+    chatProvider: "The AI provider to use for chat or vision LLM responses.",
     chatModel:
-      "The model to use for chat LLM responses specific to selected provider.",
+      "The model to use for chat or vision LLM responses specific to selected provider.",
     ttsModel: "The model to use for text to speech if TTS is enabled.",
     conversationName:
       "The name of the conversation. Used to identify the conversation in the chat history via the DOM.",
@@ -90,11 +82,18 @@ const ContentScriptUI = () => {
     }
   }, [settings.provider, settings.model, settings.useTTS]);
 
-  const chatProviderTooltip = (tooltipText: string) => (
+  const chatProviderTooltip = (
+    tooltipText: string,
+    darkMode: boolean = false
+  ) => (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger>
-          <Info className="w-4 h-4 cursor-pointer text-white" />
+          <Info
+            className={`w-4 h-4 cursor-pointer ${
+              darkMode ? "text-black" : "text-white"
+            }`}
+          />
         </TooltipTrigger>
         <TooltipContent>
           <p>{tooltipText}</p>
@@ -103,12 +102,20 @@ const ContentScriptUI = () => {
     </TooltipProvider>
   );
 
-  const settingHeader = (title: string, tooltipText: string) => (
+  const settingHeader = (
+    title: string,
+    tooltipText: string,
+    darkMode: boolean = false
+  ) => (
     <div className="flex flex-row gap-2 items-center justify-between w-fit">
-      <p className="text-xs font-bold text-white font-sans flex flex-row gap-2 items-center">
+      <p
+        className={`text-xs font-bold font-sans flex flex-row gap-2 items-center ${
+          darkMode ? "text-black" : "text-white"
+        }`}
+      >
         {title}
       </p>
-      {chatProviderTooltip(tooltipText)}
+      {chatProviderTooltip(tooltipText, darkMode)}
     </div>
   );
 
@@ -146,7 +153,7 @@ const ContentScriptUI = () => {
           if (messageIsAnImage) {
             const imageUrl = (messageIsAnImage as HTMLImageElement).src;
             if (imageUrl) {
-              sendImageToServer(imageUrl);
+              sendReceivedImageToServer(imageUrl);
               return;
             }
             return;
@@ -249,8 +256,10 @@ const ContentScriptUI = () => {
     a.click();
   }
 
-  async function sendImageToServer(imageUrl: string) {
-    const response = await sendMessage(Message.AI_VISION, imageUrl);
+  async function sendReceivedImageToServer(imageUrl: string) {
+    const response = await sendMessage(Message.AI_VISION, {
+      url: imageUrl,
+    });
     enterMessage(response);
     setTimeout(() => {
       sendMessageViaInput();
@@ -268,6 +277,7 @@ const ContentScriptUI = () => {
       return;
     }
 
+    // @ts-expect-error - ImageCapture is not defined in the browser
     const imageCapture = new ImageCapture(track);
     const bitmap = await imageCapture.grabFrame();
     const canvas = document.createElement("canvas");
@@ -282,6 +292,13 @@ const ContentScriptUI = () => {
     } else {
       downloadImage(croppedImage);
     }
+  }
+
+  async function sendImageToServer(base64Image: string) {
+    const response = await sendMessage(Message.AI_VISION, {
+      base64: base64Image,
+    });
+    sendMessage(Message.ADD_LOG, response);
   }
 
   function cropImage(imageUrl: string): Promise<string> {
@@ -440,9 +457,9 @@ const ContentScriptUI = () => {
     </div>
   );
 
-  const chatProviderSettings = (
+  const chatProviderSettings = (darkMode: boolean = false) => (
     <div className="w-auto flex flex-col gap-2 items-start rounded-md">
-      {settingHeader("Provider", toolTips.chatProvider)}
+      {settingHeader("Provider", toolTips.chatProvider, darkMode)}
       <select
         className="cursor-pointer rounded-md h-fit p-2 bg-gray-800 drop-shadow-md text-white font-sans"
         value={settings.provider ?? "openai"}
@@ -466,9 +483,9 @@ const ContentScriptUI = () => {
     </div>
   );
 
-  const chatModelSettings = (
+  const chatModelSettings = (darkMode: boolean = false) => (
     <div className="w-auto flex flex-col gap-2 items-start">
-      {settingHeader("Model", toolTips.chatModel)}
+      {settingHeader("Model", toolTips.chatModel, darkMode)}
 
       <select
         className="cursor-pointer rounded-md h-auto p-2 bg-gray-800 drop-shadow-md text-white font-sans"
@@ -521,8 +538,30 @@ const ContentScriptUI = () => {
     </button>
   );
 
+  function startVideoMonitoring() {
+    setSession({
+      ...session,
+      isVideoMonitoring: true,
+      videoMonitoringInterval: setInterval(() => {
+        sendMessage(Message.ADD_LOG, "Sending screenshot to server");
+        takeAndSendScreenshot(true);
+      }, settings.videoCaptureInterval),
+    });
+  }
+
+  function stopVideoMonitoring() {
+    setSession({
+      ...session,
+      isVideoMonitoring: false,
+      videoMonitoringInterval: null,
+    });
+    if (session.videoMonitoringInterval) {
+      clearInterval(session.videoMonitoringInterval);
+    }
+  }
+
   return (
-    <div className="flex font-sans h-[40px] flex-row gap-2 justify-end items-end px-4">
+    <div className="fixed bottom-0 flex flex-col gap-4 p-4">
       {onTheConversationScreen && (
         <div className="flex flex-col gap-2 w-full items-start justify-start">
           {conversationNameSettings}
@@ -530,23 +569,51 @@ const ContentScriptUI = () => {
           <div className="flex flex-col gap-2 bg-black p-2 rounded-md drop-shadow-md">
             <h1 className="text-xs font-bold text-white font-sans">Settings</h1>
             <div className="flex flex-row w-full h-16 gap-2">
-              {chatProviderSettings}
-              {chatModelSettings}
+              {chatProviderSettings()}
+              {chatModelSettings()}
               {ttsSettings}
             </div>
           </div>
         </div>
       )}
       {onTheCallScreen && (
-        <div className="flex flex-row gap-2">
-          <Button onClick={() => takeAndSendScreenshot(false)}>
-            Take and Send Screenshot
-          </Button>
-          <Button onClick={() => requestDisplayPermission()}>
-            {session.isPermissionGranted
-              ? "Permissions Granted"
-              : "Request Display Permission"}
-          </Button>
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-row gap-2">
+            <button
+              className={`flex cursor-pointer items-center h-12 gap-2 rounded-md p-2 drop-shadow-md font-sans text-white ${
+                session.isPermissionGranted ? "bg-green-500" : "bg-red-500"
+              }`}
+              onClick={() => requestDisplayPermission()}
+            >
+              {session.isPermissionGranted
+                ? "Display Permissions Granted"
+                : "Request Display Permissions"}
+              {session.isPermissionGranted && <Check />}
+            </button>
+            <button
+              disabled={!session.isPermissionGranted}
+              className="flex cursor-pointer items-center h-12 gap-2 rounded-md bg-white p-2 text-black drop-shadow-md font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() =>
+                session.isVideoMonitoring
+                  ? stopVideoMonitoring()
+                  : startVideoMonitoring()
+              }
+            >
+              {session.isVideoMonitoring
+                ? "Stop Monitoring Video"
+                : "Start Monitoring Video"}
+            </button>
+            <button
+              className="flex cursor-pointer items-center h-12 gap-2 rounded-md bg-white p-2 text-black drop-shadow-md font-sans disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => takeAndSendScreenshot(false)}
+            >
+              Take Screenshot
+            </button>
+          </div>
+          <div className="flex flex-row gap-2 bg-white p-2 rounded-md drop-shadow-md">
+            {chatProviderSettings(true)}
+            {chatModelSettings(true)}
+          </div>
         </div>
       )}
     </div>

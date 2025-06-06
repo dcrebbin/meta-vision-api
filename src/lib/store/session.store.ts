@@ -6,6 +6,8 @@ interface SessionStore {
   session: {
     isMonitoring: boolean;
     isPermissionGranted: boolean;
+    isVideoMonitoring: boolean;
+    videoMonitoringInterval: NodeJS.Timeout | null;
     stream: MediaStream | null;
     chatObserver: MutationObserver | null;
     conversationName: string;
@@ -16,7 +18,9 @@ interface SessionStore {
 export const useSessionStore = create<SessionStore>((set) => ({
   session: {
     isMonitoring: false,
+    isVideoMonitoring: false,
     isPermissionGranted: false,
+    videoMonitoringInterval: null,
     stream: null,
     chatObserver: null,
     conversationName: "ChatGPT",

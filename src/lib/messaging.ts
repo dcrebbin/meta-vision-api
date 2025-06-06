@@ -51,7 +51,10 @@ export type Message = (typeof Message)[keyof typeof Message];
 interface Messages {
   [Message.AI_CHAT]: (message: string) => Promise<string>;
   [Message.AI_TTS]: (message: string) => Promise<string>;
-  [Message.AI_VISION]: (message: string) => Promise<string>;
+  [Message.AI_VISION]: (message: {
+    base64?: string;
+    url?: string;
+  }) => Promise<string>;
   [Message.ADD_LOG]: (message: string) => void;
   [Message.RECEIVE_LOG]: (message: Log) => void;
   [Message.RECEIVE_MESSAGE]: (message: string) => void;

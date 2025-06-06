@@ -30,7 +30,14 @@ onMessage(Message.AI_TTS, async (message) => {
 });
 
 onMessage(Message.AI_VISION, async (message) => {
-  const imageBlob = await fetch(message.data).then((res) => res.blob());
+  let imageBlob: Blob;
+  if (message.data.base64) {
+    imageBlob = await fetch(message.data.base64).then((res) => res.blob());
+  } else if (message.data.url) {
+    imageBlob = await fetch(message.data.url).then((res) => res.blob());
+  } else {
+    return "Error: No image data provided";
+  }
   const response = await openAiVisionRequest(imageBlob);
   return response;
 });

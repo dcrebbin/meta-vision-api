@@ -10,6 +10,7 @@ interface SettingsStore {
     useTTS: boolean;
     model: Map<string, string>;
     ttsModel: string;
+    videoCaptureInterval: number;
   };
   setSettings: (settings: SettingsStore["settings"]) => void;
 }
@@ -29,6 +30,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       ["google", "gemini-2.0-flash"],
     ]),
     ttsModel: "tts-1",
+    videoCaptureInterval: 1000,
   },
   setSettings: (settings) => set({ settings }),
 }));
