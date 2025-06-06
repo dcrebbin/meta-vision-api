@@ -7,7 +7,7 @@ interface SessionStore {
     isMonitoring: boolean;
     isPermissionGranted: boolean;
     isVideoMonitoring: boolean;
-    videoMonitoringInterval: NodeJS.Timeout | null;
+    videoMonitoringInterval: number | null;
     stream: MediaStream | null;
     chatObserver: MutationObserver | null;
     conversationName: string;

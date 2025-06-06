@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { Message, sendMessage } from "./messaging";
 import { StorageKey } from "./storage";
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
@@ -34,4 +35,8 @@ export function getStorageModel(provider: string): StorageKey | undefined {
     case "tts":
       return StorageKey.TTS_MODEL;
   }
+}
+
+export function logMessage(message: string) {
+  sendMessage(Message.ADD_LOG, message);
 }

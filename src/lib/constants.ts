@@ -6,6 +6,9 @@ export const providerToTitle = {
   elevenlabs: "ElevenLabs",
 };
 
+export const MESSENGER_CALL_URL = "groupcall/ROOM";
+export const MESSENGER_CONVERSATION_URL = "messages/t/";
+
 export const aiChatProviders = ["openai", "anthropic", "perplexity", "google"];
 
 export const providerToModels = {
@@ -40,4 +43,17 @@ export const providerToTTSModels = {
     value: "eleven_multilingual_v2",
     provider: "elevenlabs",
   },
+};
+
+export const toolTips = {
+  chatProvider: "The AI provider to use for chat or vision LLM responses.",
+  chatModel:
+    "The model to use for chat or vision LLM responses specific to selected provider.",
+  ttsModel: "The model to use for text to speech if TTS is enabled.",
+  conversationName:
+    "The name of the conversation. Used to identify the conversation in the chat history via the DOM.",
+  takeAndSendScreenshot:
+    "Takes a screenshot of the current screen and sends it to the server for processing.",
+  requestDisplayPermission:
+    "Requests permission to access the display. This is required to take screenshots of the current screen.",
 };
