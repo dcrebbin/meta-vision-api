@@ -12,6 +12,10 @@ export function getStorageKey(provider: string): StorageKey | undefined {
       return StorageKey.PERPLEXITY_API_KEY;
     case "anthropic":
       return StorageKey.ANTHROPIC_API_KEY;
+    case "google":
+      return StorageKey.GOOGLE_API_KEY;
+    case "elevenlabs":
+      return StorageKey.ELEVENLABS_API_KEY;
   }
 }
 
@@ -23,5 +27,11 @@ export function getStorageModel(provider: string): StorageKey | undefined {
       return StorageKey.PERPLEXITY_MODEL;
     case "anthropic":
       return StorageKey.ANTHROPIC_MODEL;
+    case "google":
+      return StorageKey.GOOGLE_MODEL;
+    case "elevenlabs":
+      return StorageKey.ELEVENLABS_API_KEY;
+    case "tts":
+      return StorageKey.TTS_MODEL;
   }
 }

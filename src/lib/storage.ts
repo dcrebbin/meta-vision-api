@@ -1,6 +1,6 @@
+import { type WxtStorageItem, storage as browserStorage } from "#imports";
 import { useEffect, useState } from "react";
 import { Theme } from "~/types";
-import { type WxtStorageItem, storage as browserStorage } from "#imports";
 
 export const StorageKey = {
   THEME: "local:theme",
@@ -11,6 +11,11 @@ export const StorageKey = {
   PERPLEXITY_MODEL: "local:perplexity_model",
   ANTHROPIC_API_KEY: "local:anthropic_api_key",
   ANTHROPIC_MODEL: "local:anthropic_model",
+  GOOGLE_API_KEY: "local:google_api_key",
+  GOOGLE_MODEL: "local:google_model",
+  ELEVENLABS_API_KEY: "local:elevenlabs_api_key",
+  TTS_MODEL: "local:tts_model",
+  USE_TTS: "local:use_tts",
 } as const;
 
 export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
@@ -58,6 +63,33 @@ const storage = {
       fallback: "claude-3-5-sonnet-20240620",
     }
   ),
+  [StorageKey.GOOGLE_API_KEY]: browserStorage.defineItem<string>(
+    StorageKey.GOOGLE_API_KEY,
+    {
+      fallback: "",
+    }
+  ),
+  [StorageKey.GOOGLE_MODEL]: browserStorage.defineItem<string>(
+    StorageKey.GOOGLE_MODEL,
+    {
+      fallback: "gemini-2.0-flash",
+    }
+  ),
+  [StorageKey.ELEVENLABS_API_KEY]: browserStorage.defineItem<string>(
+    StorageKey.ELEVENLABS_API_KEY,
+    {
+      fallback: "",
+    }
+  ),
+  [StorageKey.TTS_MODEL]: browserStorage.defineItem<string>(
+    StorageKey.TTS_MODEL,
+    {
+      fallback: "tts-1",
+    }
+  ),
+  [StorageKey.USE_TTS]: browserStorage.defineItem<boolean>(StorageKey.USE_TTS, {
+    fallback: false,
+  }),
 } as const;
 
 type Value<T extends StorageKey> = (typeof storage)[T] extends WxtStorageItem<

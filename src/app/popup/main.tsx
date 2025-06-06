@@ -1,12 +1,8 @@
 import { Layout } from "@/components/layout/layout";
+import { providerToTitle } from "@/lib/constants";
 import { Log, Message, onMessage } from "@/lib/messaging";
 import { StorageKey, useStorage } from "@/lib/storage";
-import {
-  getStorageKey,
-  getStorageModel,
-  providerToModels,
-  providerToTitle,
-} from "@/lib/utils";
+import { getStorageKey } from "@/lib/utils";
 import { ListCollapse, SettingsIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
@@ -43,7 +39,7 @@ const Popup = () => {
             }`}
             onClick={() => setActiveTab("settings")}
           >
-            Settings
+            API Keys
             <SettingsIcon className="w-4 h-4" />
           </button>
         </div>
@@ -134,47 +130,22 @@ const Logs = () => {
 };
 
 const ProviderSetting = ({ provider }: { provider: string }) => {
-  const storageApiKey = useStorage(getStorageKey(provider) as StorageKey);
+  console.log("Provider", provider);
+  const storageApiKey = useStorage(getStorageKey(provider) as StorageKey) ?? "";
   return (
     <div className="flex flex-col gap-2.5 w-full">
       <label className="text-xs font-bold text-white" htmlFor={provider}>
-        {providerToTitle[provider as keyof typeof providerToTitle]} API key
+        {providerToTitle[provider as keyof typeof providerToTitle]}
       </label>
       <input
         className="w-full p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a]"
         type="password"
         id={provider}
-        value={storageApiKey.data ?? ""}
+        value={storageApiKey.data as string}
         onChange={(e) => {
           storageApiKey.set(e.target.value);
         }}
       />
-    </div>
-  );
-};
-
-const ProviderModel = ({ provider }: { provider: string }) => {
-  const storageModel = useStorage(getStorageModel(provider) as StorageKey);
-  return (
-    <div className="flex flex-col gap-2.5 w-full">
-      <label className="text-xs font-bold text-white" htmlFor={provider}>
-        {providerToTitle[provider as keyof typeof providerToTitle]} model
-      </label>
-      <select
-        className="w-full p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a]"
-        value={storageModel.data ?? ""}
-        onChange={(e) => {
-          storageModel.set(e.target.value as string);
-        }}
-      >
-        {providerToModels[provider as keyof typeof providerToModels].map(
-          (model) => (
-            <option key={model.value} value={model.value}>
-              {model.title}
-            </option>
-          )
-        )}
-      </select>
     </div>
   );
 };
@@ -185,7 +156,6 @@ const Settings = () => {
       {Object.keys(providerToTitle).map((provider) => (
         <div key={provider}>
           <ProviderSetting provider={provider} />
-          <ProviderModel provider={provider} />
         </div>
       ))}
     </div>

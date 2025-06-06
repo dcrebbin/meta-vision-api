@@ -6,6 +6,8 @@ export const providerToTitle = {
   elevenlabs: "ElevenLabs",
 };
 
+export const aiChatProviders = ["openai", "anthropic", "perplexity", "google"];
+
 export const providerToModels = {
   openai: [
     {
@@ -34,7 +36,7 @@ export const providerToTTSModels = {
     provider: "openai",
   },
   eleven_multilingual_v2: {
-    title: "ElevenLabs Multilingual v2",
+    title: "Multilingual v2",
     value: "eleven_multilingual_v2",
     provider: "elevenlabs",
   },

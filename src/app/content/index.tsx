@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import ReactDOM from "react-dom/client";
 
 import {
+  aiChatProviders,
   providerToModels,
   providerToTitle,
   providerToTTSModels,
@@ -15,6 +16,7 @@ import {
 import { Message, sendMessage } from "@/lib/messaging";
 import { useSessionStore } from "@/lib/store/session.store";
 import { useSettingsStore } from "@/lib/store/settings.store";
+import { MessageCircle, MessageCircleX } from "lucide-react";
 import "~/assets/styles/globals.css";
 
 class ImageCapture {
@@ -316,122 +318,145 @@ const ContentScriptUI = () => {
     );
   }
 
+  const ttsSettings = (
+    <div className="w-auto flex flex-col gap-2 items-start">
+      <div className="flex flex-row gap-2 items-center justify-between w-full">
+        <p className="text-xs font-bold text-white font-sans">TTS Model</p>
+        <div className="w-[1px] h-4 bg-white" />
+        <p className="text-xs font-bold text-white w-14 font-sans">Use TTS</p>
+        <input
+          type="checkbox"
+          checked={settings.useTTS}
+          onChange={(e) =>
+            setSettings({ ...settings, useTTS: e.target.checked })
+          }
+        />
+      </div>
+      <select
+        disabled={!settings.useTTS}
+        className="rounded-md p-2 h-fit bg-gray-800 drop-shadow-md text-white font-sans disabled:opacity-50"
+        value={settings.ttsModel ?? "tts-1"}
+        onChange={(e) => {
+          setSettings({
+            ...settings,
+            ttsModel: e.target.value,
+          });
+        }}
+      >
+        {Object.keys(providerToTTSModels).map((ttsModel) => (
+          <option key={ttsModel} value={ttsModel}>
+            {`${
+              providerToTTSModels[ttsModel as keyof typeof providerToTTSModels]
+                .title
+            } (${
+              providerToTitle[
+                providerToTTSModels[
+                  ttsModel as keyof typeof providerToTTSModels
+                ].provider as keyof typeof providerToTitle
+              ]
+            } )`}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const chatProviderSettings = (
+    <div className="w-auto flex flex-col gap-2 items-start rounded-md">
+      <p className="text-xs font-bold text-white font-sans">Provider</p>
+      <select
+        className="rounded-md h-fit p-2 bg-gray-800 drop-shadow-md text-white font-sans"
+        value={settings.provider ?? "openai"}
+        onChange={(e) => {
+          setSettings({
+            ...settings,
+            provider: e.target.value as
+              | "openai"
+              | "anthropic"
+              | "perplexity"
+              | "google",
+          });
+        }}
+      >
+        {aiChatProviders.map((provider) => (
+          <option key={provider} value={provider}>
+            {providerToTitle[provider as keyof typeof providerToTitle]}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const chatModelSettings = (
+    <div className="w-auto flex flex-col gap-2 items-start">
+      <p className="text-xs font-bold text-white font-sans">Model</p>
+      <select
+        className="rounded-md h-auto p-2 bg-gray-800 drop-shadow-md text-white font-sans"
+        value={settings.model.get(settings.provider) ?? "gpt-4o-mini"}
+        onChange={(e) => {
+          setSettings({
+            ...settings,
+            model: new Map([[settings.provider, e.target.value]]),
+          });
+        }}
+      >
+        {providerToModels[
+          settings.provider as keyof typeof providerToModels
+        ].map((model) => (
+          <option key={model.value} value={model.value}>
+            {model.title}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const conversationNameSettings = (
+    <div className="fixed m-4 right-0 top-0 flex w-[200px] flex-col gap-2 bg-black p-2 rounded-md">
+      <p className="text-xs font-bold text-white font-sans">
+        Conversation Name
+      </p>
+      <input
+        className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
+        type="text"
+        value={session.conversationName}
+        onChange={(e) =>
+          setSession({ ...session, conversationName: e.target.value })
+        }
+      />
+    </div>
+  );
+
+  const monitoringButton = (
+    <button
+      className="flex items-center h-12 gap-2 rounded-md bg-black p-2 text-white drop-shadow-md font-sans"
+      onClick={() =>
+        session.isMonitoring ? stopChatMonitoring() : startChatMonitoring()
+      }
+    >
+      <span className="text-xs font-bold w-36">
+        {session.isMonitoring
+          ? "Stop Monitoring Chat"
+          : "Start Monitoring Chat"}
+      </span>
+      {session.isMonitoring ? <MessageCircleX /> : <MessageCircle />}
+    </button>
+  );
+
   return (
     <div className="flex font-sans h-[40px] flex-row gap-2 justify-end items-end px-4">
       {onTheConversationScreen && (
-        <div className="flex flex-row gap-2 w-full items-center justify-center">
-          <div className="fixed m-4 right-0 top-0 flex w-[200px] flex-col gap-2 bg-black p-2 rounded-md">
-            <p className="text-xs font-bold text-white font-sans">
-              Conversation Name
-            </p>
-            <input
-              className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
-              type="text"
-              value={session.conversationName}
-              onChange={(e) =>
-                setSession({ ...session, conversationName: e.target.value })
-              }
-            />
-          </div>
-          <button
-            className="w-36 rounded-md p-2 bg-black drop-shadow-md text-white h-12 flex flex-row gap-2 items-center font-sans"
-            onClick={() =>
-              session.isMonitoring
-                ? stopChatMonitoring()
-                : startChatMonitoring()
-            }
-          >
-            <p className="text-xs font-bold text-white w-full font-sans">
-              {session.isMonitoring
-                ? "Stop Chat Monitoring"
-                : "Start Chat Monitoring"}
-            </p>
-          </button>
-
-          <div className="h-12 w-auto flex flex-row gap-2 items-center bg-black p-2 rounded-md">
-            <p className="text-xs font-bold text-white font-sans">Provider</p>
-            <select
-              className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
-              value={settings.provider ?? "openai"}
-              onChange={(e) => {
-                setSettings({
-                  ...settings,
-                  provider: e.target.value as
-                    | "openai"
-                    | "anthropic"
-                    | "perplexity"
-                    | "google",
-                });
-              }}
-            >
-              {Object.keys(providerToTitle).map((provider) => (
-                <option key={provider} value={provider}>
-                  {providerToTitle[provider as keyof typeof providerToTitle]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="h-12 w-auto flex flex-row gap-2 items-center bg-black p-2 rounded-md">
-            <p className="text-xs font-bold text-white font-sans">Model</p>
-            <select
-              className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
-              value={settings.model.get(settings.provider) ?? "gpt-4o-mini"}
-              onChange={(e) => {
-                setSettings({
-                  ...settings,
-                  model: new Map([[settings.provider, e.target.value]]),
-                });
-              }}
-            >
-              {providerToModels[
-                settings.provider as keyof typeof providerToModels
-              ].map((model) => (
-                <option key={model.value} value={model.value}>
-                  {model.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="w-auto h-12 flex flex-row gap-2 items-center bg-black p-2 rounded-md">
-            <p className="text-xs font-bold text-white w-14 font-sans">
-              Use TTS
-            </p>
-            <input
-              type="checkbox"
-              checked={settings.useTTS}
-              onChange={(e) =>
-                setSettings({ ...settings, useTTS: e.target.checked })
-              }
-            />
-          </div>
-          {settings.useTTS && (
-            <div className="h-12 w-auto flex flex-row gap-2 items-center bg-black p-2 rounded-md">
-              <p className="text-xs font-bold text-white font-sans">
-                TTS Model
-              </p>
-              <select
-                className="rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
-                value={settings.ttsModel ?? "tts-1"}
-                onChange={(e) => {
-                  setSettings({
-                    ...settings,
-                    ttsModel: e.target.value,
-                  });
-                }}
-              >
-                {Object.keys(providerToTTSModels).map((ttsModel) => (
-                  <option key={ttsModel} value={ttsModel}>
-                    {
-                      providerToTTSModels[
-                        ttsModel as keyof typeof providerToTTSModels
-                      ].title
-                    }
-                  </option>
-                ))}
-              </select>
+        <div className="flex flex-col gap-2 w-full items-start justify-start">
+          {conversationNameSettings}
+          {monitoringButton}
+          <div className="flex flex-col gap-2 bg-black p-2 rounded-md drop-shadow-md">
+            <h1 className="text-xs font-bold text-white font-sans">Settings</h1>
+            <div className="flex flex-row w-full h-16 gap-2">
+              {chatProviderSettings}
+              {chatModelSettings}
+              {ttsSettings}
             </div>
-          )}
+          </div>
         </div>
       )}
       {onTheCallScreen && (

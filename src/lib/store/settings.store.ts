@@ -28,7 +28,6 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       ["perplexity", "sonar-pro"],
       ["google", "gemini-2.0-flash"],
     ]),
-    ttsProvider: "openai",
     ttsModel: "tts-1",
   },
   setSettings: (settings) => set({ settings }),
