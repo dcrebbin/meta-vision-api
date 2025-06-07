@@ -12,6 +12,8 @@ export interface SettingsStore {
     };
     ttsModel: string;
     videoCaptureInterval: number;
+    isMaiUIVisible: boolean;
+    isConversationSidebarVisible: boolean;
   };
   setSettings: (settings: Partial<SettingsStore["settings"]>) => void;
 }
@@ -41,6 +43,8 @@ async function loadAndInitializeSettings() {
   useSettingsStore.getState().setSettings({
     ...storedSettings,
     model: storedSettings.model,
+    isMaiUIVisible: storedSettings.isMaiUIVisible,
+    isConversationSidebarVisible: storedSettings.isConversationSidebarVisible,
   });
 }
 

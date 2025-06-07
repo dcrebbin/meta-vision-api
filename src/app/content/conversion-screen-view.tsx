@@ -8,7 +8,7 @@ import { Message, sendMessage } from "@/lib/messaging";
 import { useSessionStore } from "@/lib/store/session.store";
 import { useSettingsStore } from "@/lib/store/settings.store";
 import { logMessage } from "@/lib/utils";
-import { MessageCircle, MessageCircleX } from "lucide-react";
+import { Eye, EyeOff, MessageCircle, MessageCircleX } from "lucide-react";
 import { ChatModelSettings } from "./components/chat-model-settings";
 import { ChatProviderSettings } from "./components/chat-provider-settings";
 import { SettingHeader } from "./components/setting-header";
@@ -19,23 +19,24 @@ export function ConversionScreenView() {
 
   const threadList = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    hideConversationThreadList();
-  }, []);
+    const selector = "div[aria-label='Thread list']";
 
-  function hideConversationThreadList() {
-    const findAndHideThreadList = () => {
+    const applyVisibility = () => {
       const threadListElement = document.querySelector(
-        "div[aria-label='Thread list']"
+        selector
       ) as HTMLDivElement;
-
       if (threadListElement) {
         threadList.current = threadListElement;
-        threadList.current.style.display = "none";
+        threadListElement.style.display = settings.isConversationSidebarVisible
+          ? "block"
+          : "none";
       }
     };
-    findAndHideThreadList();
+
+    applyVisibility();
+
     const observer = new MutationObserver(() => {
-      findAndHideThreadList();
+      applyVisibility();
     });
 
     observer.observe(document.body, {
@@ -45,11 +46,8 @@ export function ConversionScreenView() {
 
     return () => {
       observer.disconnect();
-      if (threadList.current) {
-        threadList.current.style.display = "block";
-      }
     };
-  }
+  }, [settings.isConversationSidebarVisible]);
 
   useEffect(() => {
     if (session.isMonitoring) {
@@ -244,9 +242,14 @@ export function ConversionScreenView() {
   }
 
   const conversationNameSettings = (
-    <div className="fixed m-4 right-0 top-0 flex w-[200px] flex-col gap-2 bg-black p-2 rounded-md">
+    <div
+      className={`fixed m-4 right-0 top-0 flex w-[200px] flex-col gap-2 bg-black p-2 rounded-md ${
+        settings.isMaiUIVisible ? "block" : "hidden"
+      }`}
+    >
       <SettingHeader
         title="Conversation Name"
+        darkMode={true}
         tooltipText={toolTips.conversationName}
       />
       <input
@@ -263,7 +266,11 @@ export function ConversionScreenView() {
   const ttsSettings = (
     <div className="w-auto flex flex-col gap-2 items-start">
       <div className="flex flex-row gap-2 items-center justify-between w-full">
-        <SettingHeader title="TTS Model" tooltipText={toolTips.ttsModel} />
+        <SettingHeader
+          title="TTS Model"
+          tooltipText={toolTips.ttsModel}
+          darkMode={true}
+        />
         <div className="w-[1px] h-4 bg-white" />
         <p className="text-xs font-bold text-white w-14 font-sans">Use TTS</p>
         <input
@@ -328,7 +335,9 @@ export function ConversionScreenView() {
 
   const monitoringButton = (
     <button
-      className="flex items-center cursor-pointer h-12 gap-2 rounded-md bg-black p-2 text-white drop-shadow-md font-sans"
+      className={`flex items-center cursor-pointer h-12 gap-2 rounded-md bg-black p-2 text-white drop-shadow-md font-sans ${
+        settings.isMaiUIVisible ? "block" : "hidden"
+      }`}
       onClick={() =>
         session.isMonitoring ? stopChatMonitoring() : startChatMonitoring()
       }
@@ -342,11 +351,69 @@ export function ConversionScreenView() {
     </button>
   );
 
+  function toggleConversationSidebar() {
+    const threadListElement = document.querySelector(
+      "div[aria-label='Thread list']"
+    ) as HTMLDivElement;
+
+    if (threadListElement) {
+      threadListElement.style.display =
+        threadListElement.style.display === "none" ? "block" : "none";
+    }
+    setSettings({
+      ...settings,
+      isConversationSidebarVisible: !settings.isConversationSidebarVisible,
+    });
+  }
+
+  const toggleConversationSidebarButton = (
+    <button
+      className={`flex items-center justify-baseline cursor-pointer h-12 gap-2 rounded-md bg-black p-2 text-white drop-shadow-md font-sans ${
+        settings.isMaiUIVisible ? "block" : "hidden"
+      }`}
+      onClick={() => toggleConversationSidebar()}
+    >
+      <span className="text-xs font-bold w-26">
+        {settings.isConversationSidebarVisible
+          ? "Hide Sidebar"
+          : "Show Sidebar"}
+      </span>
+      {settings.isConversationSidebarVisible ? <Eye /> : <EyeOff />}
+    </button>
+  );
+
+  const toggleMaiUIButton = (
+    <button
+      className="flex items-center justify-baseline cursor-pointer h-12 gap-2 rounded-md bg-black p-2 text-white drop-shadow-md font-sans"
+      onClick={() => toggleMaiUI()}
+    >
+      <span className="text-xs font-bold w-26">
+        {settings.isMaiUIVisible ? "Hide Mai UI" : "Show Mai UI"}
+      </span>
+      {settings.isMaiUIVisible ? <Eye /> : <EyeOff />}
+    </button>
+  );
+
+  function toggleMaiUI() {
+    setSettings({
+      ...settings,
+      isMaiUIVisible: !settings.isMaiUIVisible,
+    });
+  }
+
   return (
     <div className="flex flex-col gap-2 w-full items-start justify-start">
       {conversationNameSettings}
-      {monitoringButton}
-      <div className="flex flex-col gap-2 bg-black p-2 rounded-md drop-shadow-md">
+      <div className="flex flex-row gap-2">
+        {monitoringButton}
+        {toggleConversationSidebarButton}
+        {toggleMaiUIButton}
+      </div>
+      <div
+        className={`flex flex-col gap-2 bg-black p-2 rounded-md drop-shadow-md ${
+          settings.isMaiUIVisible ? "block" : "hidden"
+        }`}
+      >
         <h1 className="text-xs font-bold text-white font-sans">Settings</h1>
         <div className="flex flex-row w-full h-16 gap-2">
           <ChatProviderSettings darkMode={true} />

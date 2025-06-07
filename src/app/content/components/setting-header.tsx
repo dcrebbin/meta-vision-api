@@ -24,7 +24,7 @@ export function SettingHeader({
         <TooltipTrigger>
           <Info
             className={`w-4 h-4 cursor-pointer ${
-              darkMode ? "text-black" : "text-white"
+              darkMode ? "text-white" : "text-black"
             }`}
           />
         </TooltipTrigger>
@@ -39,7 +39,7 @@ export function SettingHeader({
     <div className="flex flex-row gap-2 items-center justify-between w-fit">
       <p
         className={`text-xs font-bold font-sans flex flex-row gap-2 items-center ${
-          darkMode ? "text-black" : "text-white"
+          darkMode ? "text-white" : "text-black"
         }`}
       >
         {title}

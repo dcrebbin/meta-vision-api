@@ -38,6 +38,8 @@ const storage = {
         },
         ttsModel: "tts-1",
         videoCaptureInterval: 1000,
+        isMaiUIVisible: true,
+        isConversationSidebarVisible: false,
       },
     }
   ),
