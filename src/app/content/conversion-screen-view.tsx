@@ -92,13 +92,11 @@ export function ConversionScreenView() {
     return messageLine;
   }
 
-  function handleNewImageMessage(messageLine: HTMLDivElement) {
+  function messageHasImage(messageLine: HTMLDivElement) {
     const imageUrl =
       (messageLine.querySelector("img[alt='Open photo']") as HTMLImageElement)
         ?.src ?? "";
-    if (imageUrl) {
-      sendReceivedImageToServer(imageUrl);
-    }
+    return imageUrl;
   }
 
   const handleTts = useCallback(
@@ -173,16 +171,20 @@ export function ConversionScreenView() {
       mutations.forEach(async (mutation) => {
         if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
           const messageLine = getNewMessageLine(mutation);
-          if (!messageLine) {
+          if (!messageLine || messageLine.dataset.processed) {
             return;
           }
           messageLine.dataset.processed = "true";
-          handleNewImageMessage(messageLine);
+          if (messageHasImage(messageLine)) {
+            const imageUrl = messageHasImage(messageLine);
+            sendReceivedImageToServer(imageUrl);
+            return logMessage(`Image received: ${imageUrl}`);
+          }
           const receivedMessage = messageLine.childNodes[1]?.textContent;
           if (receivedMessage && typeof receivedMessage === "string") {
             handleNewTextMessage(receivedMessage);
           }
-          return logMessage(receivedMessage ?? "");
+          return logMessage(`Message received: ${receivedMessage ?? ""}`);
         }
       });
     });

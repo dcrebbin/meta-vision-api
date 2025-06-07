@@ -1,11 +1,11 @@
 {
   "extensionDescription": {
     "description": "Description of the extension.",
-    "message": "Unofficial browser extension & hacky API for the Meta Rayban Glasses."
+    "message": "[Unofficial] Browser extension & hacky API for the Meta Rayban Glasses."
   },
   "extensionName": {
     "description": "Name of the extension.",
-    "message": "Meta Glasses API [Unofficial]"
+    "message": "Mai - Meta Glasses API for Messenger"
   },
   "hello": {
     "message": "Hello from"

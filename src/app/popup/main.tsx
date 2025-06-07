@@ -154,7 +154,7 @@ const ProviderSetting = ({ provider }: { provider: string }) => {
 
 const Settings = () => {
   return (
-    <div className="flex flex-col gap-3 w-full h-full min-h-[70vh]">
+    <div className="flex flex-col gap-3 w-full h-full">
       {Object.keys(providerToTitle).map((provider) => (
         <div key={provider}>
           <ProviderSetting provider={provider} />
