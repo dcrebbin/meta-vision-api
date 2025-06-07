@@ -4,6 +4,7 @@ export const providerToTitle = {
   anthropic: "Anthropic",
   google: "Google",
   elevenlabs: "ElevenLabs",
+  minimax: "Minimax",
 };
 
 export const MESSENGER_CALL_URL = "groupcall/ROOM";
@@ -13,6 +14,18 @@ export const aiChatProviders = ["openai", "anthropic", "perplexity", "google"];
 
 export const providerToModels = {
   openai: [
+    {
+      title: "GPT-4.1",
+      value: "gpt-4.1-2025-04-14",
+    },
+    {
+      title: "GPT-4.1-mini",
+      value: "gpt-4.1-mini",
+    },
+    {
+      title: "GPT-4.1-nano",
+      value: "gpt-4.1-nano-2025-04-14",
+    },
     {
       title: "GPT-4o-mini",
       value: "gpt-4o-mini",
@@ -42,6 +55,21 @@ export const providerToTTSModels = {
     title: "Multilingual v2",
     value: "eleven_multilingual_v2",
     provider: "elevenlabs",
+  },
+  eleven_flash_v2_5: {
+    title: "Flash v2.5",
+    value: "eleven_flash_v2_5",
+    provider: "elevenlabs",
+  },
+  eleven_turbo_v2_5: {
+    title: "Turbo v2.5",
+    value: "eleven_turbo_v2_5",
+    provider: "elevenlabs",
+  },
+  "speech-02-turbo": {
+    title: "Speech-02-Turbo",
+    value: "speech-02-turbo",
+    provider: "minimax",
   },
 };
 

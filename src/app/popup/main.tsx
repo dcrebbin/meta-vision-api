@@ -2,10 +2,11 @@ import { Layout } from "@/components/layout/layout";
 import { providerToTitle } from "@/lib/constants";
 import { Log, Message, onMessage } from "@/lib/messaging";
 import { StorageKey, useStorage } from "@/lib/storage";
-import { getStorageKey } from "@/lib/utils";
+import { useApiKeyStore } from "@/lib/store/api-key.store";
 import { ListCollapse, SettingsIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
+import { Provider, TTSProvider } from "~/types";
 
 const Popup = () => {
   const [activeTab, setActiveTab] = useState("logs");
@@ -130,8 +131,9 @@ const Logs = () => {
 };
 
 const ProviderSetting = ({ provider }: { provider: string }) => {
-  console.log("Provider", provider);
-  const storageApiKey = useStorage(getStorageKey(provider) as StorageKey) ?? "";
+  const apiKeysStore = useApiKeyStore();
+  const apiKey = apiKeysStore.apiKeys[provider as Provider | TTSProvider];
+
   return (
     <div className="flex flex-col gap-2.5 w-full">
       <label className="text-xs font-bold text-white" htmlFor={provider}>
@@ -141,9 +143,9 @@ const ProviderSetting = ({ provider }: { provider: string }) => {
         className="w-full p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a]"
         type="password"
         id={provider}
-        value={storageApiKey.data as string}
+        value={apiKey}
         onChange={(e) => {
-          storageApiKey.set(e.target.value);
+          apiKeysStore.setApiKeys({ [provider]: e.target.value });
         }}
       />
     </div>

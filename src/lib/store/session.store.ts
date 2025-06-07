@@ -1,5 +1,3 @@
-//session store
-
 import { create } from "zustand";
 
 interface SessionStore {

@@ -15,11 +15,14 @@ export function ChatModelSettings({ darkMode }: { darkMode: boolean }) {
 
       <select
         className="cursor-pointer rounded-md h-auto p-2 bg-gray-800 drop-shadow-md text-white font-sans"
-        value={settings.model.get(settings.provider) ?? "gpt-4o-mini"}
+        value={settings.model[settings.provider] ?? "gpt-4o-mini"}
         onChange={(e) => {
           setSettings({
             ...settings,
-            model: new Map([[settings.provider, e.target.value]]),
+            model: {
+              ...settings.model,
+              [settings.provider]: e.target.value,
+            },
           });
         }}
       >

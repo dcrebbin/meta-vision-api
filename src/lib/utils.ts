@@ -20,23 +20,14 @@ export function getStorageKey(provider: string): StorageKey | undefined {
   }
 }
 
-export function getStorageModel(provider: string): StorageKey | undefined {
-  switch (provider) {
-    case "openai":
-      return StorageKey.OPENAI_MODEL;
-    case "perplexity":
-      return StorageKey.PERPLEXITY_MODEL;
-    case "anthropic":
-      return StorageKey.ANTHROPIC_MODEL;
-    case "google":
-      return StorageKey.GOOGLE_MODEL;
-    case "elevenlabs":
-      return StorageKey.ELEVENLABS_API_KEY;
-    case "tts":
-      return StorageKey.TTS_MODEL;
-  }
-}
-
 export function logMessage(message: string) {
   sendMessage(Message.ADD_LOG, message);
+}
+
+export function logError(message: string) {
+  console.error(`[mai api] ${message}`);
+}
+
+export function logToConsole(message: string) {
+  console.log(`[mai api] ${message}`);
 }

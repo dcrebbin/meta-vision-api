@@ -1,36 +1,56 @@
 import { create } from "zustand";
+import type { Provider } from "~/types";
+import { getStorage, StorageKey } from "../storage";
 
-interface SettingsStore {
+export interface SettingsStore {
   settings: {
-    isFullScreen: boolean;
     imageQuality: number;
-    widthCropping: number;
-    verticalCropping: number;
-    provider: "openai" | "anthropic" | "perplexity" | "google";
+    provider: Provider;
     useTTS: boolean;
-    model: Map<string, string>;
+    model: {
+      [key in Provider]: string;
+    };
     ttsModel: string;
     videoCaptureInterval: number;
   };
-  setSettings: (settings: SettingsStore["settings"]) => void;
+  setSettings: (settings: Partial<SettingsStore["settings"]>) => void;
 }
 
-export const useSettingsStore = create<SettingsStore>((set) => ({
+const settingsStorage = getStorage(StorageKey.SETTINGS);
+
+export const useSettingsStore = create<SettingsStore>((set, get) => ({
   settings: {
-    isFullScreen: false,
-    imageQuality: 0.5,
-    widthCropping: 300,
-    verticalCropping: 100,
-    provider: "openai",
-    useTTS: false,
-    model: new Map([
-      ["openai", "gpt-4o-mini"],
-      ["anthropic", "claude-3-5-sonnet-20240620"],
-      ["perplexity", "sonar-pro"],
-      ["google", "gemini-2.0-flash"],
-    ]),
-    ttsModel: "tts-1",
-    videoCaptureInterval: 1000,
+    ...settingsStorage.fallback,
+    model: settingsStorage.fallback.model,
   },
-  setSettings: (settings) => set({ settings }),
+  setSettings: (newSettings) => {
+    const { settings } = get();
+    const updatedSettings = { ...settings, ...newSettings };
+    if (newSettings.model) {
+      updatedSettings.model = {
+        ...settings.model,
+        ...newSettings.model,
+      };
+    }
+    set({ settings: updatedSettings });
+  },
 }));
+
+async function loadAndInitializeSettings() {
+  const storedSettings = await settingsStorage.getValue();
+  useSettingsStore.getState().setSettings({
+    ...storedSettings,
+    model: storedSettings.model,
+  });
+}
+
+useSettingsStore.subscribe(async (state) => {
+  const { settings } = state;
+  const storedSettings = {
+    ...settings,
+    model: settings.model,
+  };
+  await settingsStorage.setValue(storedSettings);
+});
+
+void loadAndInitializeSettings();
