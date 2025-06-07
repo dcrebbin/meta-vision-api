@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "#imports";
+import { useCallback, useEffect, useRef, useState } from "#imports";
 import {
   providerToTTSModels,
   providerToTitle,
@@ -12,7 +12,7 @@ import {
   logMessage,
   logMessageToConsole,
 } from "@/lib/utils";
-import { Eye, EyeOff, MessageCircle, MessageCircleX } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { ChatModelSettings } from "./components/chat-model-settings";
 import { ChatProviderSettings } from "./components/chat-provider-settings";
 import { SettingHeader } from "./components/setting-header";
@@ -341,23 +341,48 @@ export function ConversionScreenView() {
     });
   }
 
-  const monitoringButton = (
-    <button
-      className={`flex items-center cursor-pointer h-12 gap-2 rounded-md bg-black p-2 text-white drop-shadow-md font-sans ${
-        settings.isMaiUIVisible ? "block" : "hidden"
-      }`}
-      onClick={() =>
-        session.isMonitoring ? stopChatMonitoring() : startChatMonitoring()
+  function useEllipsisAnimation(isActive: boolean) {
+    const [dots, setDots] = useState("");
+    useEffect(() => {
+      if (!isActive) {
+        setDots("");
+        return;
       }
-    >
-      <span className="text-xs font-bold w-36">
-        {session.isMonitoring
-          ? "Stop Monitoring Chat"
-          : "Start Monitoring Chat"}
-      </span>
-      {session.isMonitoring ? <MessageCircleX /> : <MessageCircle />}
-    </button>
-  );
+      let count = 0;
+      const interval = setInterval(() => {
+        count = (count + 1) % 4;
+        setDots(".".repeat(count));
+      }, 400);
+      return () => clearInterval(interval);
+    }, [isActive]);
+    return dots;
+  }
+
+  function MonitoringButton() {
+    const animatedDots = useEllipsisAnimation(session.isMonitoring);
+    return (
+      <button
+        className={`flex items-center cursor-pointer h-12 gap-2 rounded-md bg-black p-2 text-white drop-shadow-md font-sans ${
+          settings.isMaiUIVisible ? "block" : "hidden"
+        }`}
+        onClick={() =>
+          session.isMonitoring ? stopChatMonitoring() : startChatMonitoring()
+        }
+      >
+        {session.isMonitoring ? (
+          <span className="inline-block text-xs w-38 font-bold text-left">
+            Stop Monitoring Chat{animatedDots}
+          </span>
+        ) : (
+          <span className="inline-block text-xs w-38 font-bold text-left">
+            Start Monitoring Chat
+          </span>
+        )}
+      </button>
+    );
+  }
+
+  const monitoringButton = <MonitoringButton />;
 
   function toggleConversationSidebar() {
     const threadListElement = document.querySelector(
