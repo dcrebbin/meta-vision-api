@@ -33,6 +33,8 @@ const storage = {
           anthropic: "claude-3-5-sonnet-20240620",
           perplexity: "sonar-pro",
           google: "gemini-2.0-flash",
+          deepseek: "deepseek-chat",
+          xai: "grok-3-latest",
         },
         ttsModel: "tts-1",
         videoCaptureInterval: 1000,
@@ -49,6 +51,8 @@ const storage = {
       google: "",
       elevenlabs: "",
       minimax: "",
+      deepseek: "",
+      xai: "",
     },
   }),
 } as const;

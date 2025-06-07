@@ -5,12 +5,21 @@ export const providerToTitle = {
   google: "Google",
   elevenlabs: "ElevenLabs",
   minimax: "Minimax",
+  deepseek: "DeepSeek",
+  xai: "XAI",
 };
 
 export const MESSENGER_CALL_URL = "groupcall/ROOM";
 export const MESSENGER_CONVERSATION_URL = "messages/t/";
 
-export const aiChatProviders = ["openai", "anthropic", "perplexity", "google"];
+export const aiChatProviders = [
+  "openai",
+  "anthropic",
+  "perplexity",
+  "google",
+  "deepseek",
+  "xai",
+];
 
 export const providerToModels = {
   openai: [
@@ -26,10 +35,6 @@ export const providerToModels = {
       title: "GPT-4.1-nano",
       value: "gpt-4.1-nano-2025-04-14",
     },
-    {
-      title: "GPT-4o-mini",
-      value: "gpt-4o-mini",
-    },
     { title: "GPT-4o", value: "gpt-4o" },
   ],
   perplexity: [
@@ -40,9 +45,14 @@ export const providerToModels = {
     { title: "Claude 3.5 Sonnet", value: "claude-3-5-sonnet-20240620" },
   ],
   google: [
-    { title: "Gemini 2.0 Flash", value: "gemini-2.0-flash" },
-    { title: "Gemini 2.0 Flash Lite", value: "gemini-2.0-flash-lite" },
+    { title: "Gemini 2.5 Flash", value: "gemini-2.5-flash" },
+    { title: "Gemini 2.5 Flash Lite", value: "gemini-2.5-flash-lite" },
   ],
+  deepseek: [
+    { title: "DeepSeek Chat", value: "deepseek-chat" },
+    { title: "DeepSeek Reasoner", value: "deepseek-reasoner" },
+  ],
+  xai: [{ title: "Grok 3", value: "grok-3-latest" }],
 };
 
 export const providerToTTSModels = {

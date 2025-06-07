@@ -1,11 +1,13 @@
 import { Provider, TTSProvider } from "@/types";
 import { AnthropicProvider, createAnthropic } from "@ai-sdk/anthropic";
+import { createDeepSeek, DeepSeekProvider } from "@ai-sdk/deepseek";
 import {
   createGoogleGenerativeAI,
   GoogleGenerativeAIProvider,
 } from "@ai-sdk/google";
 import { createOpenAI, OpenAIProvider } from "@ai-sdk/openai";
 import { createPerplexity, PerplexityProvider } from "@ai-sdk/perplexity";
+import { createXai, XaiProvider } from "@ai-sdk/xai";
 import { generateText } from "ai";
 import { providerToTTSModels } from "./constants";
 import { getStorage, StorageKey } from "./storage";
@@ -18,6 +20,8 @@ async function createAiProvider(
   | PerplexityProvider
   | AnthropicProvider
   | GoogleGenerativeAIProvider
+  | DeepSeekProvider
+  | XaiProvider
 > {
   const storageApiKey = getStorage(StorageKey.API_KEYS);
   const apiKeys = await storageApiKey.getValue();
@@ -38,6 +42,14 @@ async function createAiProvider(
       });
     case Provider.GOOGLE:
       return createGoogleGenerativeAI({
+        apiKey: apiKey,
+      });
+    case Provider.DEEPSEEK:
+      return createDeepSeek({
+        apiKey: apiKey,
+      });
+    case Provider.XAI:
+      return createXai({
         apiKey: apiKey,
       });
   }

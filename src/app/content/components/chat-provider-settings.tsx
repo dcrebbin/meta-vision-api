@@ -1,5 +1,6 @@
 import { aiChatProviders, providerToTitle, toolTips } from "@/lib/constants";
 import { useSettingsStore } from "@/lib/store/settings.store";
+import { Provider } from "@/types";
 import { SettingHeader } from "./setting-header";
 
 export function ChatProviderSettings({ darkMode }: { darkMode: boolean }) {
@@ -18,11 +19,7 @@ export function ChatProviderSettings({ darkMode }: { darkMode: boolean }) {
         onChange={(e) => {
           setSettings({
             ...settings,
-            provider: e.target.value as
-              | "openai"
-              | "anthropic"
-              | "perplexity"
-              | "google",
+            provider: e.target.value as Provider,
           });
         }}
       >

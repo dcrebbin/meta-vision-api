@@ -16,6 +16,8 @@ export const Provider = {
   ANTHROPIC: "anthropic",
   PERPLEXITY: "perplexity",
   GOOGLE: "google",
+  DEEPSEEK: "deepseek",
+  XAI: "xai",
 } as const;
 
 export type TTSProvider = (typeof TTSProvider)[keyof typeof TTSProvider];
