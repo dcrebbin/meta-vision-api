@@ -11,7 +11,7 @@ import { createXai, XaiProvider } from "@ai-sdk/xai";
 import { generateText } from "ai";
 import { providerToTTSModels } from "./constants";
 import { getStorage, StorageKey } from "./storage";
-import { logErrorToConsole, logMessageToConsole } from "./utils";
+import { logError, logMessage } from "./utils";
 
 async function createAiProvider(
   provider: Provider
@@ -26,6 +26,11 @@ async function createAiProvider(
   const storageApiKey = getStorage(StorageKey.API_KEYS);
   const apiKeys = await storageApiKey.getValue();
   const apiKey = apiKeys[provider];
+  if (!apiKey) {
+    throw new Error(
+      `No API key found for provider: ${provider}. Please set it in the toolbar.`
+    );
+  }
   switch (provider) {
     case Provider.OPENAI:
       return createOpenAI({
@@ -56,24 +61,27 @@ async function createAiProvider(
 }
 
 export async function generateAiText(message: string) {
-  logMessageToConsole("generateAiText");
+  logMessage("generateAiText");
   const settings = getStorage(StorageKey.SETTINGS);
   const settingsValue = await settings.getValue();
   const provider = settingsValue.provider;
   const model = settingsValue.model[provider];
-
-  const aiProvider = await createAiProvider(provider);
-
-  const { text } = await generateText({
-    model: aiProvider(model),
-    prompt: message,
-  });
-  logMessageToConsole("generateAiText Response Generated: " + text);
-  return text;
+  try {
+    const aiProvider = await createAiProvider(provider);
+    const { text } = await generateText({
+      model: aiProvider(model),
+      prompt: message,
+    });
+    logMessage("generateAiText Response Generated: " + text);
+    return text;
+  } catch (error) {
+    logError("Error generating AI text: " + error);
+    throw error;
+  }
 }
 
 export async function aiVisionRequest(imageBlob: Blob) {
-  logMessageToConsole("aiVisionRequest");
+  logMessage("aiVisionRequest");
 
   const base64Image = await new Promise<string>((resolve) => {
     const reader = new FileReader();
@@ -88,9 +96,8 @@ export async function aiVisionRequest(imageBlob: Blob) {
   const settingsValue = await settings.getValue();
   const provider = settingsValue.provider;
   const model = settingsValue.model[provider];
-
-  const aiProvider = await createAiProvider(provider);
   try {
+    const aiProvider = await createAiProvider(provider);
     const { text } = await generateText({
       model: aiProvider(model),
       messages: [
@@ -108,8 +115,8 @@ export async function aiVisionRequest(imageBlob: Blob) {
     });
     return text;
   } catch (error) {
-    logErrorToConsole(`(aiVisionRequest) ${error}`);
-    return "Error: " + error;
+    logError(`(aiVisionRequest) ${error}`);
+    throw error;
   }
 }
 
@@ -120,7 +127,7 @@ export async function aiTtsRequest(message: string) {
     providerToTTSModels[
       settingsValue.ttsModel as keyof typeof providerToTTSModels
     ].provider;
-  logMessageToConsole(
+  logMessage(
     `(aiTtsRequest) | message: ${message} | ttsProvider: ${ttsProvider}`
   );
 
@@ -133,16 +140,16 @@ export async function aiTtsRequest(message: string) {
       case TTSProvider.MINIMAX:
         return minimaxTtsRequest(message);
       default:
-        return "Error: No provider selected";
+        throw new Error("No provider selected");
     }
   } catch (error) {
-    logErrorToConsole(`(aiTtsRequest) ${error}`);
-    return "Error: " + error;
+    logError(`(aiTtsRequest) ${error}`);
+    throw error;
   }
 }
 
 async function retrieveBase64Audio(audioBlob: Blob) {
-  logMessageToConsole("retrieveBase64Audio");
+  logMessage("retrieveBase64Audio");
   try {
     const arrayBuffer = await audioBlob.arrayBuffer();
     const base64Audio = btoa(
@@ -153,16 +160,21 @@ async function retrieveBase64Audio(audioBlob: Blob) {
     );
     return base64Audio;
   } catch (error) {
-    logErrorToConsole(`(retrieveBase64Audio) ${error}`);
-    return "Error: " + error;
+    logError(`(retrieveBase64Audio) ${error}`);
+    throw error;
   }
 }
 
 async function elevenLabsTtsRequest(message: string) {
-  logMessageToConsole("elevenLabsTtsRequest");
+  logMessage("elevenLabsTtsRequest");
   const storageApiKey = getStorage(StorageKey.API_KEYS);
   const apiKeys = await storageApiKey.getValue();
   const apiKey = apiKeys[TTSProvider.ELEVENLABS];
+  if (!apiKey) {
+    throw new Error(
+      `No API key found for provider: ${TTSProvider.ELEVENLABS}. Please set it in the toolbar.`
+    );
+  }
   const settings = getStorage(StorageKey.SETTINGS);
   const settingsValue = await settings.getValue();
   const ttsModel = settingsValue.ttsModel;
@@ -195,11 +207,15 @@ interface MinimaxTtsResponse {
 }
 
 async function minimaxTtsRequest(text: string) {
-  logMessageToConsole("minimaxTtsRequest");
+  logMessage("minimaxTtsRequest");
   const storageApiKey = getStorage(StorageKey.API_KEYS);
   const apiKeys = await storageApiKey.getValue();
   const apiKey = apiKeys[TTSProvider.MINIMAX];
-
+  if (!apiKey) {
+    throw new Error(
+      `No API key found for provider: ${TTSProvider.MINIMAX}. Please set it in the toolbar.`
+    );
+  }
   const ttsResponse = await fetch("https://api.minimaxi.chat/v1/t2a_v2", {
     method: "POST",
     headers: {
@@ -225,20 +241,20 @@ async function minimaxTtsRequest(text: string) {
       },
     }),
   }).catch((error) => {
-    logErrorToConsole(`(minimaxTtsRequest) ${error}`);
-    return "Error: " + error;
+    logError(`(minimaxTtsRequest) ${error}`);
+    throw error;
   });
 
   if (ttsResponse instanceof Response && !ttsResponse.ok) {
-    logErrorToConsole(`(minimaxTtsRequest) ${ttsResponse.statusText}`);
-    return "Error: " + ttsResponse.statusText;
+    logError(`(minimaxTtsRequest) ${ttsResponse.statusText}`);
+    throw new Error(ttsResponse.statusText);
   }
   const responseData = await (ttsResponse as Response).json();
 
   const { data } = responseData as MinimaxTtsResponse;
   if (!data?.audio) {
-    logErrorToConsole("(minimaxTtsRequest) No audio data in response");
-    return "Error: No audio data in response";
+    logError("(minimaxTtsRequest) No audio data in response");
+    throw new Error("No audio data in response");
   }
   function hexToUint8Array(hex: string): Uint8Array {
     if (hex.length % 2 !== 0) throw new Error("Invalid hex string");
@@ -259,10 +275,15 @@ async function minimaxTtsRequest(text: string) {
 }
 
 async function openAiTtsRequest(message: string) {
-  logMessageToConsole("openAiTtsRequest");
+  logMessage("openAiTtsRequest");
   const storageApiKey = getStorage(StorageKey.API_KEYS);
   const apiKeys = await storageApiKey.getValue();
   const apiKey = apiKeys[TTSProvider.OPENAI];
+  if (!apiKey) {
+    throw new Error(
+      `No API key found for provider: ${TTSProvider.OPENAI}. Please set it in the toolbar.`
+    );
+  }
   const settings = getStorage(StorageKey.SETTINGS);
   const settingsValue = await settings.getValue();
   const ttsModel = settingsValue.ttsModel;

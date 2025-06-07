@@ -1,7 +1,7 @@
 import { defineBackground } from "#imports";
 import { aiTtsRequest, aiVisionRequest, generateAiText } from "@/lib/ai";
 import { getStorage, StorageKey } from "@/lib/storage";
-import { logErrorToConsole, logMessageToConsole } from "@/lib/utils";
+import { logError, logMessage } from "@/lib/utils";
 import { Log, Message, onMessage } from "~/lib/messaging";
 
 const main = () => {
@@ -12,7 +12,7 @@ const main = () => {
 
 onMessage(Message.ADD_LOG, async (message) => {
   try {
-    logMessageToConsole("[background] Add Log: " + message.data);
+    logMessage("[background] Add Log: " + message.data);
     const storage = getStorage(StorageKey.LOGS);
     const logs = await storage.getValue();
     const newLog = new Log(message.data, Date.now());
@@ -20,44 +20,44 @@ onMessage(Message.ADD_LOG, async (message) => {
     await storage.setValue(logs);
     return;
   } catch (error) {
-    logErrorToConsole("[background] Error adding log: " + error);
+    logError("[background] Error adding log: " + error);
   }
 });
 
 onMessage(Message.AI_CHAT, async (message) => {
   try {
-    logMessageToConsole("[background] AI Chat Request Received");
+    logMessage("[background] AI Chat Request Received");
     const response = await generateAiText(message.data);
-    logMessageToConsole("[background] AI Chat Response Generated: " + response);
+    logMessage("[background] AI Chat Response Generated: " + response);
     return response;
-  } catch (error) {
-    console.error("Error:", error);
-    return "Error: " + error;
+  } catch (error: unknown) {
+    logError("[background] AI Chat Error: " + error);
+    throw error;
   }
 });
 
 onMessage(Message.AI_TTS, async (message) => {
-  logMessageToConsole("[background] AI TTS Request Received");
+  logMessage("[background] AI TTS Request Received");
   const base64Audio = await aiTtsRequest(message.data);
-  logMessageToConsole(
+  logMessage(
     "[background] AI TTS Response Generated: Length " + base64Audio.length
   );
   return base64Audio;
 });
 
 onMessage(Message.AI_VISION, async (message) => {
-  logMessageToConsole("[background] AI Vision Request Received");
+  logMessage("[background] AI Vision Request Received");
   let imageBlob: Blob;
   if (message.data.base64) {
     imageBlob = await fetch(message.data.base64).then((res) => res.blob());
   } else if (message.data.url) {
     imageBlob = await fetch(message.data.url).then((res) => res.blob());
   } else {
-    logErrorToConsole("No image data provided");
-    return "Error: No image data provided";
+    logError("[background] No image data provided");
+    throw new Error("No image data provided");
   }
   const response = await aiVisionRequest(imageBlob);
-  logMessageToConsole("[background] AI Vision Response Generated: " + response);
+  logMessage("[background] AI Vision Response Generated: " + response);
   return response;
 });
 

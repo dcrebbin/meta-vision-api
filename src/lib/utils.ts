@@ -9,10 +9,15 @@ export function logMessage(message: string) {
   sendMessage(Message.ADD_LOG, message);
 }
 
-export function logErrorToConsole(message: string) {
+export function logError(message: string) {
+  logErrorToConsole(message);
+  sendMessage(Message.ADD_LOG, message);
+}
+
+function logErrorToConsole(message: string) {
   console.error(`[mai api] ${message}`);
 }
 
-export function logMessageToConsole(message: string) {
+function logMessageToConsole(message: string) {
   console.log(`[mai api] ${message}`);
 }
