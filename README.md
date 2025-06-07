@@ -1,13 +1,15 @@
-# Meta Vision
+# mai - Meta Glasses API for Messenger
 
-### Meta Glasses Vision API Implementation
+![](/assets/mai-promotional.png)
 
-This is a hacky way to integrate GPT4 Vision into the Meta Rayban Smart Glasses using voice commands.
+This is a browser extension to add custom AI bots to messenger that can be used with the Meta Rayban Smart Glasses or the standalone messenger app.
+
+Features:
 
 Hey Meta send a photo to my food log: [Video Demo](https://www.youtube.com/watch?v=PiEDrcLCmew)
 
 Video Monitoring
-![](/video-example.png)
+![](/assets/video-monitoring.png)
 
 Requirements:
 
@@ -19,13 +21,13 @@ c) Alternative Facebook/Messenger account
 
 d) Chromium based browser
 
-e) Bun 
+e) Bun
 
 # Chrome Extension
 
-1. bun install 
+1. bun install
 
-2. 
+2.
 
 ## Hey Meta Send a Photo to **\_\_\_\_\_**
 
