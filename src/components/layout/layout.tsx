@@ -42,7 +42,7 @@ const LayoutContent = ({
   return (
     <div
       className={cn(
-        "flex min-h-screen bg-black text-foreground w-full min-w-[23rem] flex-col items-center justify-center font-sans text-base"
+        "flex min-h-screen bg-[#1c1e21] text-foreground w-full min-w-[23rem] flex-col items-center justify-center font-sans text-base"
       )}
     >
       <div
