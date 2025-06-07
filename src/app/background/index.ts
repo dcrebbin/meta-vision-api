@@ -1,13 +1,28 @@
 import { defineBackground } from "#imports";
 import { aiTtsRequest, aiVisionRequest, generateAiText } from "@/lib/ai";
+import { getStorage, StorageKey } from "@/lib/storage";
 import { logErrorToConsole, logMessageToConsole } from "@/lib/utils";
-import { Message, onMessage } from "~/lib/messaging";
+import { Log, Message, onMessage } from "~/lib/messaging";
 
 const main = () => {
   console.log(
     "Background service worker is running! Edit `src/app/background` and save to reload."
   );
 };
+
+onMessage(Message.ADD_LOG, async (message) => {
+  try {
+    logMessageToConsole("[background] Add Log: " + message.data);
+    const storage = getStorage(StorageKey.LOGS);
+    const logs = await storage.getValue();
+    const newLog = new Log(message.data, Date.now());
+    logs.push(newLog);
+    await storage.setValue(logs);
+    return;
+  } catch (error) {
+    logErrorToConsole("[background] Error adding log: " + error);
+  }
+});
 
 onMessage(Message.AI_CHAT, async (message) => {
   try {

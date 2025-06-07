@@ -87,8 +87,8 @@ const Logs = () => {
     const unsubscribe = onMessage(
       Message.RECEIVE_LOG,
       (message: { data: Log }) => {
-        const currentLogs = storage.data ?? "[]";
-        storage.set([...currentLogs, JSON.stringify(message.data)]);
+        const currentLogs = storage.data ?? [];
+        storage.set([...currentLogs, message.data]);
         setReceivedLogs((prev) => [...prev, message.data]);
       }
     );

@@ -1,6 +1,7 @@
 import { type WxtStorageItem, storage as browserStorage } from "#imports";
 import { useEffect, useState } from "react";
 import { Provider, TTSProvider } from "~/types";
+import { Log } from "./messaging";
 import { type SettingsStore } from "./store/settings.store";
 
 type StoredSettings = Omit<SettingsStore["settings"], "model"> & {
@@ -18,7 +19,7 @@ export const StorageKey = {
 export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
 
 const storage = {
-  [StorageKey.LOGS]: browserStorage.defineItem<string[]>(StorageKey.LOGS, {
+  [StorageKey.LOGS]: browserStorage.defineItem<Log[]>(StorageKey.LOGS, {
     fallback: [],
   }),
   [StorageKey.SETTINGS]: browserStorage.defineItem<StoredSettings>(

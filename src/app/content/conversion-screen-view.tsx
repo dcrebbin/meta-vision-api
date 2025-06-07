@@ -7,7 +7,11 @@ import {
 import { Message, sendMessage } from "@/lib/messaging";
 import { useSessionStore } from "@/lib/store/session.store";
 import { useSettingsStore } from "@/lib/store/settings.store";
-import { logMessage } from "@/lib/utils";
+import {
+  logErrorToConsole,
+  logMessage,
+  logMessageToConsole,
+} from "@/lib/utils";
 import { Eye, EyeOff, MessageCircle, MessageCircleX } from "lucide-react";
 import { ChatModelSettings } from "./components/chat-model-settings";
 import { ChatProviderSettings } from "./components/chat-provider-settings";
@@ -109,11 +113,15 @@ export function ConversionScreenView() {
 
   const handleNewTextMessage = useCallback(
     async (receivedMessage: string) => {
-      logMessage("User sent: " + receivedMessage);
-      const aiResponse = await sendMessage(Message.AI_CHAT, receivedMessage);
-      sendMessageToUser(aiResponse);
-      if (settings.useTTS) {
-        handleTts(aiResponse);
+      logMessageToConsole("User sent: " + receivedMessage);
+      try {
+        const aiResponse = await sendMessage(Message.AI_CHAT, receivedMessage);
+        sendMessageToUser(aiResponse);
+        if (settings.useTTS) {
+          handleTts(aiResponse);
+        }
+      } catch (error) {
+        logErrorToConsole("Error sending message to user: " + error);
       }
     },
     [sendMessage, sendMessageToUser, settings.useTTS, handleTts]
