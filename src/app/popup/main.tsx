@@ -82,6 +82,7 @@ const Popup = () => {
 const Logs = () => {
   const storage = useStorage(StorageKey.LOGS);
   const [receivedLogs, setReceivedLogs] = useState<Log[]>([]);
+  const [search, setSearch] = useState("");
   useEffect(() => {
     const parsedLogs = Log.fromJSON(JSON.stringify(storage.data));
 
@@ -120,18 +121,29 @@ const Logs = () => {
         Clear Logs
       </button>
       <div id="logs-container">
-        {receivedLogs?.map((log, index) => (
-          <div
-            key={index}
-            className="text-sm flex flex-col items-start justify-between w-full my-4"
-          >
-            <hr className="w-full border-gray-400" />
-            <p className="text-xs text-gray-400 font-mono">
-              {new Date(log.timestamp).toLocaleString()}
-            </p>
-            <p>{log.message}</p>
-          </div>
-        ))}
+        <input
+          className="w-full p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a] mb-2 pr-4"
+          type="text"
+          placeholder="Search logs"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {receivedLogs
+          ?.filter((log) =>
+            log.message.toLowerCase().includes(search.toLowerCase())
+          )
+          .map((log, index) => (
+            <div
+              key={index}
+              className="text-sm flex flex-col items-start justify-between w-full mb-4"
+            >
+              <hr className="w-full border-gray-400" />
+              <p className="text-xs text-gray-400 font-mono">
+                {new Date(log.timestamp).toLocaleString()}
+              </p>
+              <p>{log.message}</p>
+            </div>
+          ))}
       </div>
     </div>
   );
