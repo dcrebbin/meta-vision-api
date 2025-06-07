@@ -11,7 +11,7 @@ import { createXai, XaiProvider } from "@ai-sdk/xai";
 import { generateText } from "ai";
 import { providerToTTSModels } from "./constants";
 import { getStorage, StorageKey } from "./storage";
-import { logError, logToConsole } from "./utils";
+import { logErrorToConsole, logMessageToConsole } from "./utils";
 
 async function createAiProvider(
   provider: Provider
@@ -56,6 +56,7 @@ async function createAiProvider(
 }
 
 export async function generateAiText(message: string) {
+  logMessageToConsole("generateAiText");
   const settings = getStorage(StorageKey.SETTINGS);
   const settingsValue = await settings.getValue();
   const provider = settingsValue.provider;
@@ -67,11 +68,12 @@ export async function generateAiText(message: string) {
     model: aiProvider(model),
     prompt: message,
   });
+  logMessageToConsole("generateAiText Response Generated: " + text);
   return text;
 }
 
 export async function aiVisionRequest(imageBlob: Blob) {
-  logToConsole("aiVisionRequest");
+  logMessageToConsole("aiVisionRequest");
 
   const base64Image = await new Promise<string>((resolve) => {
     const reader = new FileReader();
@@ -106,7 +108,7 @@ export async function aiVisionRequest(imageBlob: Blob) {
     });
     return text;
   } catch (error) {
-    logError(`(aiVisionRequest) ${error}`);
+    logErrorToConsole(`(aiVisionRequest) ${error}`);
     return "Error: " + error;
   }
 }
@@ -118,7 +120,7 @@ export async function aiTtsRequest(message: string) {
     providerToTTSModels[
       settingsValue.ttsModel as keyof typeof providerToTTSModels
     ].provider;
-  logToConsole(
+  logMessageToConsole(
     `(aiTtsRequest) | message: ${message} | ttsProvider: ${ttsProvider}`
   );
 
@@ -134,13 +136,13 @@ export async function aiTtsRequest(message: string) {
         return "Error: No provider selected";
     }
   } catch (error) {
-    logError(`(aiTtsRequest) ${error}`);
+    logErrorToConsole(`(aiTtsRequest) ${error}`);
     return "Error: " + error;
   }
 }
 
 async function retrieveBase64Audio(audioBlob: Blob) {
-  logToConsole("retrieveBase64Audio");
+  logMessageToConsole("retrieveBase64Audio");
   try {
     const arrayBuffer = await audioBlob.arrayBuffer();
     const base64Audio = btoa(
@@ -151,13 +153,13 @@ async function retrieveBase64Audio(audioBlob: Blob) {
     );
     return base64Audio;
   } catch (error) {
-    logError(`(retrieveBase64Audio) ${error}`);
+    logErrorToConsole(`(retrieveBase64Audio) ${error}`);
     return "Error: " + error;
   }
 }
 
 async function elevenLabsTtsRequest(message: string) {
-  logToConsole("elevenLabsTtsRequest");
+  logMessageToConsole("elevenLabsTtsRequest");
   const storageApiKey = getStorage(StorageKey.API_KEYS);
   const apiKeys = await storageApiKey.getValue();
   const apiKey = apiKeys[TTSProvider.ELEVENLABS];
@@ -193,7 +195,7 @@ interface MinimaxTtsResponse {
 }
 
 async function minimaxTtsRequest(text: string) {
-  logToConsole("minimaxTtsRequest");
+  logMessageToConsole("minimaxTtsRequest");
   const storageApiKey = getStorage(StorageKey.API_KEYS);
   const apiKeys = await storageApiKey.getValue();
   const apiKey = apiKeys[TTSProvider.MINIMAX];
@@ -223,19 +225,19 @@ async function minimaxTtsRequest(text: string) {
       },
     }),
   }).catch((error) => {
-    logError(`(minimaxTtsRequest) ${error}`);
+    logErrorToConsole(`(minimaxTtsRequest) ${error}`);
     return "Error: " + error;
   });
 
   if (ttsResponse instanceof Response && !ttsResponse.ok) {
-    logError(`(minimaxTtsRequest) ${ttsResponse.statusText}`);
+    logErrorToConsole(`(minimaxTtsRequest) ${ttsResponse.statusText}`);
     return "Error: " + ttsResponse.statusText;
   }
   const responseData = await (ttsResponse as Response).json();
 
   const { data } = responseData as MinimaxTtsResponse;
   if (!data?.audio) {
-    logError("(minimaxTtsRequest) No audio data in response");
+    logErrorToConsole("(minimaxTtsRequest) No audio data in response");
     return "Error: No audio data in response";
   }
   function hexToUint8Array(hex: string): Uint8Array {
@@ -257,7 +259,7 @@ async function minimaxTtsRequest(text: string) {
 }
 
 async function openAiTtsRequest(message: string) {
-  logToConsole("openAiTtsRequest");
+  logMessageToConsole("openAiTtsRequest");
   const storageApiKey = getStorage(StorageKey.API_KEYS);
   const apiKeys = await storageApiKey.getValue();
   const apiKey = apiKeys[TTSProvider.OPENAI];

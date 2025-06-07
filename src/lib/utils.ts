@@ -5,14 +5,14 @@ import { Message, sendMessage } from "./messaging";
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
 export function logMessage(message: string) {
-  logToConsole(message);
+  logMessageToConsole(message);
   sendMessage(Message.ADD_LOG, message);
 }
 
-export function logError(message: string) {
+export function logErrorToConsole(message: string) {
   console.error(`[mai api] ${message}`);
 }
 
-export function logToConsole(message: string) {
+export function logMessageToConsole(message: string) {
   console.log(`[mai api] ${message}`);
 }

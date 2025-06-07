@@ -414,7 +414,7 @@ export function ConversionScreenView() {
           settings.isMaiUIVisible ? "block" : "hidden"
         }`}
       >
-        <h1 className="text-xs font-bold text-white font-sans">Settings</h1>
+        <h1 className="text-xs font-bold text-white font-sans">AI Settings</h1>
         <div className="flex flex-row w-full h-16 gap-2">
           <ChatProviderSettings darkMode={true} />
           <ChatModelSettings darkMode={true} />
