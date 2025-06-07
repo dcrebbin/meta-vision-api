@@ -93,9 +93,9 @@ export function ConversionScreenView() {
   }
 
   function handleNewImageMessage(messageLine: HTMLDivElement) {
-    const imageUrl = (
-      messageLine.querySelector("img[alt='Open photo']") as HTMLImageElement
-    ).src;
+    const imageUrl =
+      (messageLine.querySelector("img[alt='Open photo']") as HTMLImageElement)
+        ?.src ?? "";
     if (imageUrl) {
       sendReceivedImageToServer(imageUrl);
     }
@@ -105,7 +105,7 @@ export function ConversionScreenView() {
     async (aiResponse: string) => {
       logMessage("Sending TTS request");
       const ttsResponse = await sendMessage(Message.AI_TTS, aiResponse);
-      logMessage("TTS Response received: ");
+      logMessage("TTS Response received. Sending to user.");
       sendAudioToUser(ttsResponse);
     },
     [sendAudioToUser]
@@ -113,10 +113,9 @@ export function ConversionScreenView() {
 
   const handleNewTextMessage = useCallback(
     async (receivedMessage: string) => {
-      logMessage("Sending chat request");
-
+      logMessage("User sent: " + receivedMessage);
       const aiResponse = await sendMessage(Message.AI_CHAT, receivedMessage);
-      sendMessageToUser(receivedMessage, aiResponse);
+      sendMessageToUser(aiResponse);
       if (settings.useTTS) {
         handleTts(aiResponse);
       }
@@ -124,15 +123,14 @@ export function ConversionScreenView() {
     [sendMessage, sendMessageToUser, settings.useTTS, handleTts]
   );
 
-  function sendMessageToUser(receivedMessage: string, aiResponse: string) {
-    logMessage(aiResponse);
-    enterMessage(receivedMessage);
+  function sendMessageToUser(aiResponse: string) {
+    enterMessage(aiResponse);
 
     setTimeout(() => {
       logMessage(
-        `Provider: ${settings.provider} | Model: ${settings.model.get(
-          settings.provider
-        )} | Message received: ${receivedMessage}`
+        `Provider: ${settings.provider} | Model: ${
+          settings.model[settings.provider]
+        } | Message received: ${aiResponse}`
       );
       sendMessageViaInput();
     }, 200);
@@ -328,7 +326,7 @@ export function ConversionScreenView() {
 
   const monitoringButton = (
     <button
-      className="flex items-center h-12 gap-2 rounded-md bg-black p-2 text-white drop-shadow-md font-sans"
+      className="flex items-center cursor-pointer h-12 gap-2 rounded-md bg-black p-2 text-white drop-shadow-md font-sans"
       onClick={() =>
         session.isMonitoring ? stopChatMonitoring() : startChatMonitoring()
       }

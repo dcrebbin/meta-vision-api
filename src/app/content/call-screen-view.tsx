@@ -2,6 +2,7 @@ import { Message, sendMessage } from "@/lib/messaging";
 import { useSessionStore } from "@/lib/store/session.store";
 import { useSettingsStore } from "@/lib/store/settings.store";
 import { logMessage } from "@/lib/utils";
+import { Video, VideoOff } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import { ChatModelSettings } from "./components/chat-model-settings";
 import { ChatProviderSettings } from "./components/chat-provider-settings";
@@ -108,24 +109,16 @@ export function CallScreenView() {
   }, [session.videoMonitoringInterval]);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 fixed top-0 left-0 opacity-75 p-4">
       <div className="flex gap-2">
         <button
-          className="flex h-12 items-center gap-2 rounded-md bg-white p-2 font-sans text-black drop-shadow-md"
+          className="flex cursor-pointer h-12 items-center gap-2 rounded-md bg-white p-2 font-sans text-black drop-shadow-md"
           onClick={session.isVideoMonitoring ? stopMonitoring : startMonitoring}
         >
           {session.isVideoMonitoring
             ? "Stop Monitoring Video"
             : "Start Monitoring Video"}
-        </button>
-
-        <button
-          className="flex h-12 items-center gap-2 rounded-md bg-white p-2 font-sans text-black drop-shadow-md disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() =>
-            takeScreenshot({ saveToFile: true, sendToServer: false })
-          }
-        >
-          Take Screenshot
+          {session.isVideoMonitoring ? <VideoOff /> : <Video />}
         </button>
       </div>
 
