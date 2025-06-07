@@ -214,13 +214,16 @@ async function openAiTtsRequest(message: string) {
   const storageApiKey = getStorage(StorageKey.API_KEYS);
   const apiKeys = await storageApiKey.getValue();
   const apiKey = apiKeys[TTSProvider.OPENAI];
+  const settings = getStorage(StorageKey.SETTINGS);
+  const settingsValue = await settings.getValue();
+  const ttsModel = settingsValue.ttsModel;
 
   const response = await fetch("https://api.openai.com/v1/audio/speech", {
     method: "POST",
     body: JSON.stringify({
-      model: "tts-1",
+      model: ttsModel,
       input: message,
-      voice: "alloy",
+      voice: ttsModel === "tts-1" ? "alloy" : "coral",
     }),
     headers: {
       "Content-Type": "application/json",

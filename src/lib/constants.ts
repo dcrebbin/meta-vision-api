@@ -51,6 +51,11 @@ export const providerToTTSModels = {
     value: "tts-1",
     provider: "openai",
   },
+  "gpt-4o-mini-tts": {
+    title: "GPT 4o mini TTS",
+    value: "gpt-4o-mini-tts",
+    provider: "openai",
+  },
   eleven_multilingual_v2: {
     title: "Multilingual v2",
     value: "eleven_multilingual_v2",
@@ -67,7 +72,7 @@ export const providerToTTSModels = {
     provider: "elevenlabs",
   },
   "speech-02-turbo": {
-    title: "Speech-02-Turbo",
+    title: "Speech 02 Turbo",
     value: "speech-02-turbo",
     provider: "minimax",
   },
