@@ -143,8 +143,9 @@ async function retrieveBase64Audio(audioBlob: Blob) {
 
 async function elevenLabsTtsRequest(message: string) {
   logToConsole("elevenLabsTtsRequest");
-  const storageApiKey = getStorage(StorageKey.ELEVENLABS_API_KEY);
-  const ELEVENLABS_API_KEY = await storageApiKey.getValue();
+  const storageApiKey = getStorage(StorageKey.API_KEYS);
+  const apiKeys = await storageApiKey.getValue();
+  const apiKey = apiKeys[TTSProvider.ELEVENLABS];
   const settings = getStorage(StorageKey.SETTINGS);
   const settingsValue = await settings.getValue();
   const ttsModel = settingsValue.ttsModel;
@@ -154,7 +155,7 @@ async function elevenLabsTtsRequest(message: string) {
     {
       method: "POST",
       headers: {
-        "xi-api-key": ELEVENLABS_API_KEY,
+        "xi-api-key": apiKey,
         "Content-Type": "application/json",
         Accept: "audio/mpeg",
       },
@@ -172,14 +173,15 @@ async function elevenLabsTtsRequest(message: string) {
 async function minimaxTtsRequest(text: string) {
   logToConsole("minimaxTtsRequest");
   const storageApiKey = getStorage(StorageKey.API_KEYS);
-  const MINIMAX_API_KEY = await storageApiKey.getValue();
+  const apiKeys = await storageApiKey.getValue();
+  const apiKey = apiKeys[TTSProvider.MINIMAX];
 
   const ttsResponse = await fetch(
     "https://api.minimaxi.chat/v1/t2a_v2?GroupId=1920022035161944772",
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${MINIMAX_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -209,8 +211,9 @@ async function minimaxTtsRequest(text: string) {
 
 async function openAiTtsRequest(message: string) {
   logToConsole("openAiTtsRequest");
-  const storageApiKey = getStorage(StorageKey.OPENAI_API_KEY);
-  const OPENAI_API_KEY = await storageApiKey.getValue();
+  const storageApiKey = getStorage(StorageKey.API_KEYS);
+  const apiKeys = await storageApiKey.getValue();
+  const apiKey = apiKeys[TTSProvider.OPENAI];
 
   const response = await fetch("https://api.openai.com/v1/audio/speech", {
     method: "POST",
@@ -222,7 +225,7 @@ async function openAiTtsRequest(message: string) {
     headers: {
       "Content-Type": "application/json",
       Accept: "audio/mpeg",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
     },
   });
 
