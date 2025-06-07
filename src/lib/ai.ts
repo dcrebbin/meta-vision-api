@@ -112,13 +112,16 @@ export async function aiVisionRequest(imageBlob: Blob) {
 }
 
 export async function aiTtsRequest(message: string) {
-  logToConsole("aiTtsRequest");
   const settings = getStorage(StorageKey.SETTINGS);
   const settingsValue = await settings.getValue();
   const ttsProvider =
     providerToTTSModels[
       settingsValue.ttsModel as keyof typeof providerToTTSModels
     ].provider;
+  logToConsole(
+    `(aiTtsRequest) | message: ${message} | ttsProvider: ${ttsProvider}`
+  );
+
   try {
     switch (ttsProvider) {
       case TTSProvider.OPENAI:
@@ -182,43 +185,75 @@ async function elevenLabsTtsRequest(message: string) {
   return retrieveBase64Audio(audioBlob);
 }
 
+interface MinimaxTtsResponse {
+  data?: {
+    audio?: string;
+  };
+  [key: string]: unknown;
+}
+
 async function minimaxTtsRequest(text: string) {
   logToConsole("minimaxTtsRequest");
   const storageApiKey = getStorage(StorageKey.API_KEYS);
   const apiKeys = await storageApiKey.getValue();
   const apiKey = apiKeys[TTSProvider.MINIMAX];
 
-  const ttsResponse = await fetch(
-    "https://api.minimaxi.chat/v1/t2a_v2?GroupId=1920022035161944772",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+  const ttsResponse = await fetch("https://api.minimaxi.chat/v1/t2a_v2", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "speech-02-turbo",
+      text: text,
+      stream: false,
+      subtitle_enable: false,
+      voice_setting: {
+        voice_id: "English_Aussie_Bloke",
+        speed: 1,
+        vol: 1,
+        pitch: 0,
       },
-      body: JSON.stringify({
-        model: "speech-02-turbo",
-        text: text,
-        stream: false,
-        subtitle_enable: false,
-        voice_setting: {
-          voice_id: "English_Aussie_Bloke",
-          speed: 1,
-          vol: 1,
-          pitch: 0,
-        },
-        audio_setting: {
-          sample_rate: 32000,
-          bitrate: 128000,
-          format: "mp3",
-          channel: 1,
-        },
-      }),
-    }
-  );
+      audio_setting: {
+        sample_rate: 32000,
+        bitrate: 128000,
+        format: "mp3",
+        channel: 1,
+      },
+    }),
+  }).catch((error) => {
+    logError(`(minimaxTtsRequest) ${error}`);
+    return "Error: " + error;
+  });
 
-  const audioBlob = await ttsResponse.blob();
-  return retrieveBase64Audio(audioBlob);
+  if (ttsResponse instanceof Response && !ttsResponse.ok) {
+    logError(`(minimaxTtsRequest) ${ttsResponse.statusText}`);
+    return "Error: " + ttsResponse.statusText;
+  }
+  const responseData = await (ttsResponse as Response).json();
+
+  const { data } = responseData as MinimaxTtsResponse;
+  if (!data?.audio) {
+    logError("(minimaxTtsRequest) No audio data in response");
+    return "Error: No audio data in response";
+  }
+  function hexToUint8Array(hex: string): Uint8Array {
+    if (hex.length % 2 !== 0) throw new Error("Invalid hex string");
+    const arr = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2)
+      arr[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+    return arr;
+  }
+  const audioBytes = hexToUint8Array(data.audio);
+  function uint8ToBase64(bytes: Uint8Array): string {
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++)
+      binary += String.fromCharCode(bytes[i] ?? 0);
+    return btoa(binary);
+  }
+  const base64Audio = uint8ToBase64(audioBytes);
+  return base64Audio;
 }
 
 async function openAiTtsRequest(message: string) {
