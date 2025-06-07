@@ -1,5 +1,5 @@
 import { defineBackground } from "#imports";
-import { openAiRequest, openAiTtsRequest, openAiVisionRequest } from "@/lib/ai";
+import { aiTtsRequest, aiVisionRequest, generateAiText } from "@/lib/ai";
 import { Log, Message, onMessage, sendMessage } from "~/lib/messaging";
 
 const main = () => {
@@ -16,7 +16,7 @@ onMessage(Message.ADD_LOG, (message) => {
 
 onMessage(Message.AI_CHAT, async (message) => {
   try {
-    const response = await openAiRequest(message.data);
+    const response = await generateAiText(message.data);
     return response;
   } catch (error) {
     console.error("Error:", error);
@@ -25,7 +25,7 @@ onMessage(Message.AI_CHAT, async (message) => {
 });
 
 onMessage(Message.AI_TTS, async (message) => {
-  const base64Audio = await openAiTtsRequest(message.data);
+  const base64Audio = await aiTtsRequest(message.data);
   return base64Audio;
 });
 
@@ -38,7 +38,7 @@ onMessage(Message.AI_VISION, async (message) => {
   } else {
     return "Error: No image data provided";
   }
-  const response = await openAiVisionRequest(imageBlob);
+  const response = await aiVisionRequest(imageBlob);
   return response;
 });
 
