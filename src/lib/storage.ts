@@ -13,11 +13,6 @@ export const StorageKey = {
   LOGS: "local:logs",
   SETTINGS: "local:settings",
   API_KEYS: "local:api_keys",
-  OPENAI_API_KEY: "local:openai_api_key",
-  PERPLEXITY_API_KEY: "local:perplexity_api_key",
-  ANTHROPIC_API_KEY: "local:anthropic_api_key",
-  GOOGLE_API_KEY: "local:google_api_key",
-  ELEVENLABS_API_KEY: "local:elevenlabs_api_key",
 } as const;
 
 export type StorageKey = (typeof StorageKey)[keyof typeof StorageKey];
@@ -56,36 +51,6 @@ const storage = {
       minimax: "",
     },
   }),
-  [StorageKey.OPENAI_API_KEY]: browserStorage.defineItem<string>(
-    StorageKey.OPENAI_API_KEY,
-    {
-      fallback: "",
-    }
-  ),
-  [StorageKey.PERPLEXITY_API_KEY]: browserStorage.defineItem<string>(
-    StorageKey.PERPLEXITY_API_KEY,
-    {
-      fallback: "",
-    }
-  ),
-  [StorageKey.ANTHROPIC_API_KEY]: browserStorage.defineItem<string>(
-    StorageKey.ANTHROPIC_API_KEY,
-    {
-      fallback: "",
-    }
-  ),
-  [StorageKey.GOOGLE_API_KEY]: browserStorage.defineItem<string>(
-    StorageKey.GOOGLE_API_KEY,
-    {
-      fallback: "",
-    }
-  ),
-  [StorageKey.ELEVENLABS_API_KEY]: browserStorage.defineItem<string>(
-    StorageKey.ELEVENLABS_API_KEY,
-    {
-      fallback: "",
-    }
-  ),
 } as const;
 
 type Value<T extends StorageKey> = (typeof storage)[T] extends WxtStorageItem<
