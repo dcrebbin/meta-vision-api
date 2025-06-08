@@ -299,8 +299,64 @@ export function ConversionScreenView() {
     </div>
   );
 
-  function startChatMonitoring() {
-    setSession({ ...session, isMonitoring: true });
+  function isAtBottom() {
+    const conversation = document.querySelector(
+      `div[aria-label*='Messages in conversation titled']`
+    ) as HTMLDivElement;
+    if (!conversation) {
+      return false;
+    }
+    const scrollContent = conversation.firstChild?.firstChild as HTMLDivElement;
+    if (!scrollContent) {
+      return false;
+    }
+    return scrollContent.scrollHeight === scrollContent.scrollTop;
+  }
+
+  function scrollToBottom() {
+    const conversation = document.querySelector(
+      `div[aria-label*='Messages in conversation titled']`
+    ) as HTMLDivElement;
+    if (conversation) {
+      const scrollContent = conversation.firstChild
+        ?.firstChild as HTMLDivElement;
+      if (!scrollContent) {
+        return false;
+      }
+      if (scrollContent.scrollHeight === scrollContent.scrollTop) {
+        return true;
+      }
+      scrollContent.scrollTo({
+        top: scrollContent.scrollHeight,
+        behavior: "instant",
+      });
+      return true;
+    }
+    return false;
+  }
+
+  useEffect(() => {
+    if (!session.isMonitoring) {
+      return;
+    }
+    const conversation = document.querySelector(
+      `div[aria-label*='Messages in conversation titled']`
+    ) as HTMLDivElement;
+    if (conversation) {
+      const scrollContent = conversation.firstChild
+        ?.firstChild as HTMLDivElement;
+      scrollContent.addEventListener("scroll", stopChatMonitoring);
+      return () => {
+        scrollContent.removeEventListener("scroll", stopChatMonitoring);
+      };
+    }
+  }, [session.isMonitoring]);
+
+  async function startChatMonitoring() {
+    if (!isAtBottom()) {
+      scrollToBottom();
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
     const newChatObserver = observeChat();
     setSession({
       ...session,

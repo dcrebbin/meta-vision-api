@@ -92,3 +92,7 @@ by [Devon Crebbin](https://github.com/dcrebbin)
 Please reach out if there are any issues or feature requests :)
 
 Hopefully the Meta Reality Labs team will provide an SDK in the future so these types of integrations can be ✨productionised✨
+
+Credits:
+
+[Anime Sky from Vecteezy](https://www.vecteezy.com/vector-art/53757812-an-anime-style-illustration-of-clouds-in-the-sky) is used in the icon
