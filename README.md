@@ -31,6 +31,8 @@ c) Alternative Facebook/Messenger account
 
 4. Add any api keys you want to use in the extension: the API settings tab has more information on how to get them
 
+5. Sigin into your alt Facebook account and head to [facebook.com/messages/t](https://www.facebook.com/messages/t) and start monitoring the conversation
+
 ## Hey Meta Send a Photo/Message to **\_\_\_\_\_**
 
 Before we setup our extension we're going to trick the Meta Glasses into allowing us to send a message to (nearly) any name e.g: "Hey Meta send a message to ChatGPT".
