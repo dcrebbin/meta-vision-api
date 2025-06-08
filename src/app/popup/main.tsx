@@ -1,5 +1,5 @@
 import { Layout } from "@/components/layout/layout";
-import { providerToTitle } from "@/lib/constants";
+import { providerInformation } from "@/lib/constants";
 import { Log, Message, onMessage } from "@/lib/messaging";
 import { StorageKey, useStorage } from "@/lib/storage";
 import { useApiKeyStore } from "@/lib/store/api-key.store";
@@ -83,6 +83,7 @@ const Logs = () => {
   const storage = useStorage(StorageKey.LOGS);
   const [receivedLogs, setReceivedLogs] = useState<Log[]>([]);
   const [search, setSearch] = useState("");
+  const [filterSelected, setFilterSelected] = useState(false);
   useEffect(() => {
     const parsedLogs = Log.fromJSON(JSON.stringify(storage.data));
 
@@ -120,14 +121,16 @@ const Logs = () => {
       >
         Clear Logs
       </button>
-      <div id="logs-container">
-        <input
-          className="w-full p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a] mb-2 pr-4"
-          type="text"
-          placeholder="Search logs"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div id="logs-container relative">
+        <div className="flex flex-row items-center gap-2 relative">
+          <input
+            className="w-full p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a] mb-2 pr-4"
+            type="text"
+            placeholder="Search logs"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         {receivedLogs
           ?.filter((log) =>
             log.message.toLowerCase().includes(search.toLowerCase())
@@ -156,7 +159,10 @@ const ProviderSetting = ({ provider }: { provider: string }) => {
   return (
     <div className="flex flex-col gap-2.5 w-full">
       <label className="text-xs font-bold text-white" htmlFor={provider}>
-        {providerToTitle[provider as keyof typeof providerToTitle]}
+        {
+          providerInformation[provider as keyof typeof providerInformation]
+            .title
+        }
       </label>
       <input
         className="w-full p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a]"
@@ -174,7 +180,7 @@ const ProviderSetting = ({ provider }: { provider: string }) => {
 const Settings = () => {
   return (
     <div className="flex flex-col gap-3 w-full h-screen overflow-y-auto mb-6 px-2 pb-2">
-      {Object.keys(providerToTitle).map((provider) => (
+      {Object.keys(providerInformation).map((provider) => (
         <div key={provider}>
           <ProviderSetting provider={provider} />
         </div>

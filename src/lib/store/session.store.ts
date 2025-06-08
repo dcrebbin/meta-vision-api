@@ -8,7 +8,6 @@ interface SessionStore {
     videoMonitoringInterval: number | null;
     stream: MediaStream | null;
     chatObserver: MutationObserver | null;
-    conversationName: string;
   };
   setSession: (session: SessionStore["session"]) => void;
 }
@@ -21,7 +20,6 @@ export const useSessionStore = create<SessionStore>((set) => ({
     videoMonitoringInterval: null,
     stream: null,
     chatObserver: null,
-    conversationName: "ChatGPT",
   },
   setSession: (session) => set({ session }),
 }));

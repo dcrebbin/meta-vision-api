@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "#imports";
 import {
+  providerInformation,
   providerToTTSModels,
-  providerToTitle,
   toolTips,
 } from "@/lib/constants";
 import { Message, sendMessage } from "@/lib/messaging";
@@ -193,7 +193,7 @@ export function ConversionScreenView() {
     });
     newChatObserver.observe(
       document.querySelector(
-        `div[aria-label='Messages in conversation titled ${session.conversationName}']`
+        `div[aria-label*='Messages in conversation titled']`
       ) as Node,
       {
         childList: true,
@@ -246,28 +246,6 @@ export function ConversionScreenView() {
     );
   }
 
-  const conversationNameSettings = (
-    <div
-      className={`fixed m-4 right-0 top-0 flex w-[200px] flex-col gap-2 bg-black p-2 rounded-md ${
-        settings.isMaiUIVisible ? "block" : "hidden"
-      }`}
-    >
-      <SettingHeader
-        title="Conversation Name"
-        darkMode={true}
-        tooltipText={toolTips.conversationName}
-      />
-      <input
-        className="cursor-pointer rounded-md p-2 bg-gray-800 drop-shadow-md text-white font-sans"
-        type="text"
-        value={session.conversationName}
-        onChange={(e) =>
-          setSession({ ...session, conversationName: e.target.value })
-        }
-      />
-    </div>
-  );
-
   const ttsSettings = (
     <div className="w-auto flex flex-col gap-2 items-start">
       <div className="flex flex-row gap-2 items-center justify-between w-full">
@@ -306,13 +284,15 @@ export function ConversionScreenView() {
             {`${
               providerToTTSModels[ttsModel as keyof typeof providerToTTSModels]
                 .title
-            } (${
-              providerToTitle[
-                providerToTTSModels[
-                  ttsModel as keyof typeof providerToTTSModels
-                ].provider as keyof typeof providerToTitle
-              ]
-            } )`}
+            }${
+              providerInformation[ttsModel as keyof typeof providerInformation]
+                ? ` (${
+                    providerInformation[
+                      ttsModel as keyof typeof providerInformation
+                    ].title
+                  })`
+                : ""
+            }`}
           </option>
         ))}
       </select>
@@ -432,7 +412,6 @@ export function ConversionScreenView() {
   }
   return (
     <div className="flex flex-col gap-2 w-full items-start justify-start">
-      {conversationNameSettings}
       <div className="flex flex-row gap-2">
         {monitoringButton}
         {toggleConversationSidebarButton}

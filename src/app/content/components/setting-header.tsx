@@ -38,7 +38,7 @@ export function SettingHeader({
   return (
     <div className="flex flex-row gap-2 items-center justify-between w-fit">
       <p
-        className={`text-xs font-bold font-sans flex flex-row gap-2 items-center ${
+        className={`text-sm font-bold font-sans flex flex-row gap-2 items-center ${
           darkMode ? "text-white" : "text-black"
         }`}
       >

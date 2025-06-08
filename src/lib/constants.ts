@@ -1,12 +1,40 @@
-export const providerToTitle = {
-  openai: "OpenAI",
-  perplexity: "Perplexity",
-  anthropic: "Anthropic",
-  google: "Google",
-  elevenlabs: "ElevenLabs",
-  minimax: "Minimax",
-  deepseek: "DeepSeek",
-  xai: "XAI",
+export const providerInformation = {
+  openai: {
+    title: "OpenAI",
+    url: "https://openai.com",
+    modelsUrl: "https://platform.openai.com/docs/models",
+  },
+  perplexity: {
+    title: "Perplexity",
+    url: "https://perplexity.ai",
+    modelsUrl: "https://docs.perplexity.ai/models/model-cards",
+  },
+  anthropic: {
+    title: "Anthropic",
+    url: "https://anthropic.com",
+    modelsUrl:
+      "https://docs.anthropic.com/en/docs/about-claude/models/overview",
+  },
+  google: {
+    title: "Google",
+    url: "https://google.com",
+    modelsUrl: "https://ai.google.dev/models",
+  },
+  elevenlabs: {
+    title: "ElevenLabs",
+    url: "https://elevenlabs.io",
+    modelsUrl: "https://elevenlabs.io/docs/models",
+  },
+  deepseek: {
+    title: "DeepSeek",
+    url: "https://deepseek.com",
+    modelsUrl: "https://api-docs.deepseek.com/quick_start/pricing",
+  },
+  xai: {
+    title: "xAI",
+    url: "https://x.ai",
+    modelsUrl: "https://docs.x.ai/docs/models",
+  },
 };
 
 export const MESSENGER_CALL_URL = "groupcall/ROOM";

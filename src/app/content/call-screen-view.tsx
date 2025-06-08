@@ -51,10 +51,14 @@ export function CallScreenView() {
   const { settings } = useSettingsStore();
 
   const sendImageToServer = useCallback(async (base64Image: string) => {
-    const response = await sendMessage(Message.AI_VISION, {
-      base64: base64Image,
-    });
-    logMessage(response);
+    try {
+      const response = await sendMessage(Message.AI_VISION, {
+        base64: base64Image,
+      });
+      logMessage(response);
+    } catch (error) {
+      throw error;
+    }
   }, []);
 
   const takeScreenshot = useCallback(
@@ -62,14 +66,31 @@ export function CallScreenView() {
       const { saveToFile = false, sendToServer = true } = opts;
       const dataUrl = await createScreenshot();
       if (!dataUrl) return;
-
-      if (sendToServer) await sendImageToServer(dataUrl);
+      try {
+        if (sendToServer) await sendImageToServer(dataUrl);
+      } catch (error) {
+        logMessage(error as string);
+        alert(error as string);
+        stopMonitoring();
+      }
       if (saveToFile) downloadDataUrl(dataUrl);
     },
     [sendImageToServer]
   );
 
+  function hasVideoElement() {
+    const video = document.querySelector(
+      "video[style='display: block;']"
+    ) as HTMLVideoElement | null;
+    return video !== null;
+  }
+
   const startMonitoring = useCallback(() => {
+    if (!hasVideoElement()) {
+      alert("No video element found. Please check if you are in a call.");
+      return;
+    }
+
     if (session.isVideoMonitoring) return;
 
     const intervalId = window.setInterval(() => {
@@ -109,7 +130,7 @@ export function CallScreenView() {
   }, [session.videoMonitoringInterval]);
 
   return (
-    <div className="flex flex-col gap-2 fixed top-0 left-0 opacity-75 p-4">
+    <div className="flex flex-col gap-2 fixed bottom-0 left-0 p-4">
       <div className="flex gap-2">
         <button
           className="flex cursor-pointer h-12 items-center gap-2 rounded-md bg-white p-2 font-sans text-black drop-shadow-md"
@@ -123,8 +144,8 @@ export function CallScreenView() {
       </div>
 
       <div className="flex gap-2 rounded-md bg-white p-2 drop-shadow-md">
-        <ChatProviderSettings darkMode={true} />
-        <ChatModelSettings darkMode={true} />
+        <ChatProviderSettings darkMode={false} />
+        <ChatModelSettings darkMode={false} />
       </div>
     </div>
   );
