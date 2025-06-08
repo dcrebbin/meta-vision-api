@@ -10,6 +10,12 @@ const main = () => {
   );
 };
 
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.tabs.create({
+    url: chrome.runtime.getURL("popup.html"),
+  });
+});
+
 onMessage(Message.ADD_LOG, async (message) => {
   try {
     logMessage("[background] Add Log: " + message.data);

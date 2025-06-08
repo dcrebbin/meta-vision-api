@@ -21,6 +21,21 @@ const Popup = () => {
   }
 
   const isWindowedPopup = window.outerWidth > 400 && window.outerHeight > 400;
+  const apiKeys = useApiKeyStore();
+
+  useEffect(() => {
+    if (apiKeys.isLoaded) {
+      const hasSetAnyApiKeys = Object.values(apiKeys.apiKeys).some(
+        (value) => value
+      );
+      if (!hasSetAnyApiKeys) {
+        alert(
+          "No API keys found. Please set your API keys in this settings tab."
+        );
+        setActiveTab("settings");
+      }
+    }
+  }, [apiKeys.isLoaded]);
 
   return (
     <Layout>
