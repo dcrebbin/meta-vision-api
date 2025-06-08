@@ -3,13 +3,13 @@ import { providerInformation } from "@/lib/constants";
 import { Log, Message, onMessage } from "@/lib/messaging";
 import { StorageKey, useStorage } from "@/lib/storage";
 import { useApiKeyStore } from "@/lib/store/api-key.store";
-import { ListCollapse, SettingsIcon } from "lucide-react";
+import { Globe, ListCollapse, SettingsIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { Provider, TTSProvider } from "~/types";
 
 const Popup = () => {
-  const [activeTab, setActiveTab] = useState("logs");
+  const [activeTab, setActiveTab] = useState("settings");
   function popOut() {
     chrome.windows.create({
       url: chrome.runtime.getURL("popup.html"),
@@ -171,23 +171,63 @@ const ProviderSetting = ({ provider }: { provider: string }) => {
   const apiKeysStore = useApiKeyStore();
   const apiKey = apiKeysStore.apiKeys[provider as Provider | TTSProvider];
 
+  const Logo =
+    providerInformation[provider as keyof typeof providerInformation].logo;
+
   return (
     <div className="flex flex-col gap-2.5 w-full">
-      <label className="text-xs font-bold text-white" htmlFor={provider}>
-        {
-          providerInformation[provider as keyof typeof providerInformation]
-            .title
-        }
+      <div className="flex flex-row items-center gap-2.5">
+        <h3 className="text-md font-bold text-white">
+          {
+            providerInformation[provider as keyof typeof providerInformation]
+              .title
+          }
+        </h3>
+        <div className="w-8 h-8 flex items-center justify-center">
+          <Logo />
+        </div>
+      </div>
+
+      <label
+        className="text-xs font-bold text-white flex flex-row items-center gap-2"
+        htmlFor={provider}
+      >
+        <a
+          className="flex items-center justify-center gap-2 h-10 rounded-full drop-shadow-2xl cursor-pointer hover:underline"
+          href={
+            providerInformation[provider as keyof typeof providerInformation]
+              .apiKeyUrl
+          }
+          target="_blank"
+        >
+          <p>API Key</p>
+          <Globe className="w-4 h-4 text-white" />
+        </a>
       </label>
       <input
         className="w-full p-2 bg-[#4a4a4a] border-none rounded text-white cursor-pointer hover:bg-[#5a5a5a]"
         type="password"
+        placeholder="Enter your API key"
         id={provider}
         value={apiKey}
         onChange={(e) => {
           apiKeysStore.setApiKeys({ [provider]: e.target.value });
         }}
       />
+      <a
+        className="text-sm mt-1 flex  gap-2 h-10 hover:underline cursor-pointer flex items-center"
+        href={
+          providerInformation[provider as keyof typeof providerInformation]
+            .modelsUrl
+        }
+        target="_blank"
+      >
+        <span>Model Overview</span>
+        <span>
+          <Globe className="w-4 h-4 text-white" />
+        </span>
+      </a>
+      <hr className="w-full border-gray-400 py-0 my-0 h-1" />
     </div>
   );
 };
@@ -195,6 +235,7 @@ const ProviderSetting = ({ provider }: { provider: string }) => {
 const Settings = () => {
   return (
     <div className="flex flex-col gap-3 w-full h-screen overflow-y-auto mb-6 px-2 pb-2">
+      <hr className="w-full border-gray-400 py-0 my-0 h-1" />
       {Object.keys(providerInformation).map((provider) => (
         <div key={provider}>
           <ProviderSetting provider={provider} />

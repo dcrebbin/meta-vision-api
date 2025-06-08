@@ -1,39 +1,69 @@
+import { ElevenLabsLogo } from "./logos/11labs";
+import { AnthropicLogo } from "./logos/anthropic";
+import { DeepSeekLogo } from "./logos/deepseek";
+import { GoogleLogo } from "./logos/google";
+import { MinimaxLogo } from "./logos/minimax";
+import { OpenAILogo } from "./logos/openai";
+import { PerplexityLogo } from "./logos/perplexity";
+import { XAILogo } from "./logos/xai";
+
 export const providerInformation = {
   openai: {
     title: "OpenAI",
     url: "https://openai.com",
     modelsUrl: "https://platform.openai.com/docs/models",
+    apiKeyUrl: "https://platform.openai.com/api-keys",
+    logo: OpenAILogo,
   },
   perplexity: {
     title: "Perplexity",
     url: "https://perplexity.ai",
     modelsUrl: "https://docs.perplexity.ai/models/model-cards",
+    apiKeyUrl: "https://docs.perplexity.ai/guides/getting-started",
+    logo: PerplexityLogo,
   },
   anthropic: {
     title: "Anthropic",
     url: "https://anthropic.com",
     modelsUrl:
       "https://docs.anthropic.com/en/docs/about-claude/models/overview",
+    apiKeyUrl: "https://console.anthropic.com",
+    logo: AnthropicLogo,
   },
   google: {
     title: "Google",
     url: "https://google.com",
     modelsUrl: "https://ai.google.dev/models",
+    apiKeyUrl: "https://ai.google.dev/gemini-api/docs/api-key",
+    logo: GoogleLogo,
   },
   elevenlabs: {
     title: "ElevenLabs",
     url: "https://elevenlabs.io",
     modelsUrl: "https://elevenlabs.io/docs/models",
+    apiKeyUrl: "https://elevenlabs.io/app/settings/api-keys",
+    logo: ElevenLabsLogo,
   },
   deepseek: {
     title: "DeepSeek",
     url: "https://deepseek.com",
     modelsUrl: "https://api-docs.deepseek.com/quick_start/pricing",
+    apiKeyUrl: "https://platform.deepseek.com/",
+    logo: DeepSeekLogo,
   },
   xai: {
     title: "xAI",
     url: "https://x.ai",
     modelsUrl: "https://docs.x.ai/docs/models",
+    apiKeyUrl: "https://console.x.ai/",
+    logo: XAILogo,
+  },
+  minimax: {
+    title: "Minimax",
+    url: "https://www.minimax.io/",
+    modelsUrl: "https://www.minimax.io/platform_overview",
+    apiKeyUrl: "https://www.minimax.io/platform",
+    logo: MinimaxLogo,
   },
 };
 
