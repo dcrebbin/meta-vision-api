@@ -1,114 +1,98 @@
-# Meta Vision 
-### Meta Glasses GPT4 Vision API Implementation
+# Mai - Meta Glasses API for Messenger
 
-This is a hacky way to integrate GPT4 Vision into the Meta Rayban Smart Glasses using voice commands.
+![](/assets/mai-promotional.png)
 
-[Example Demonstration](https://www.youtube.com/watch?v=PiEDrcLCmew)
+**This is a browser extension to add custom AI bots to messenger that can be used with the Meta Rayban Smart Glasses or the standalone messenger app.**
 
-Requirements:
+## Features:
 
-a) [Meta Rayban Smart Glasses](https://about.fb.com/news/2023/09/new-ray-ban-meta-smart-glasses/)
+1. Hey Meta send a photo to my food log: [Video Demo](https://www.youtube.com/watch?v=PiEDrcLCmew)
 
-b) [OpenAi Api Key](https://platform.openai.com/)
+2. Hey Meta send a message to ChatGPT
+
+3. Video Monitoring: Send screenshots of your video calls to your chosen provider (ChatGPT, Claude etc) and then log the output to the log viewer
+   ![](/assets/video-monitoring.png)
+
+### Requirements:
+
+a) [Meta Rayban Smart Glasses](https://about.fb.com/news/2023/09/new-ray-ban-meta-smart-glasses/) (or the standalone messenger app)
+
+b) [OpenAI/Perplexity/Claude etc Api Key](https://platform.openai.com/)
 
 c) Alternative Facebook/Messenger account
 
-d) [bun](https://bun.sh/)
+### Browser Extension Setup
 
-### Setup
+1. bun install
 
-#### Get the server up and running:
+2. bun run dev:chrome (or brave, firefox)
 
-1) Add a .env file with your OpenAi API key (example via ``env.example``)
+3. This should build and run the extension and automatically open it
 
-2) Run ``bun install``
+4. Add any api keys you want to use in the extension: the API settings tab has more information on how to get them
 
-3) Run ``bun run dev``
+## Hey Meta Send a Photo/Message to **\_\_\_\_\_**
 
-4) Server should be up and running on PORT 3103
+Before we setup our extension we're going to trick the Meta Glasses into allowing us to send a message to (nearly) any name e.g: "Hey Meta send a message to ChatGPT".
 
-#### Add the Messenger Chat Observer:
+### Tricking Meta
 
-**WARNING**: bookmarklets are a slightly obscure and very hacky way to execute arbitrary javascript in your browser, before running **MAKE SURE** to check the code you're executing. 
-The bookmarklet code is documented below in the section titled: **Bookmarklet Code Breakdown**
+1. Create a messenger group chat with 2 other facebook accounts (the minimum amount allowed to create a group chat)
 
-1) Login to [messenger.com](https://www.messenger.com) with an alternative messenger/facebook account (make sure you are friends with your main account that's logged into your meta view app)
+![](/assets/create-a-chat.png)
 
-2) Copy and paste the code from ``bookmarklet.js`` and create a new bookmark in your browser with the URL as the code (alternatively import it as a bookmark)
+2. Remove the account you're not going to use
+   ![](/assets/remove-member.png)
 
-3) Click the newly created bookmark
+3. Change the name of the chat
+   ![](/assets/change-chat-name.png)
 
-4) Upon success a dialog should appear with **Added Messenger Chat Observer**
+4. Update the group chat photo (for a legit feel)
+   ![](/assets/change-photo.png)
 
-#### Test the integration:
+5. Set a nickname for your alt bot account
+   ![](/assets/edit-nickname.png)
 
-1) Make sure within the Meta View app that the messenger connection is connected to the appropriate main account
+6. Go to the Meta view app within the communications section
+   ![](/assets/communications.jpeg)
 
-2) Say ``You: Hey Meta, send a photo to *name of alternative account*``
+7. Go to Messenger and disconnect then reconnect your messenger account
+   ![](/assets/disconnect.jpeg)
 
-3) `Meta: Send a photo to *name of alternative account*`
+I believe this step resyncs all your latest chats and friends which then allows that Meta Glasses to become aware of your newly created group chat to allow for voice commands!
 
-4) ``You: Yes``
+### Chat Monitoring
 
-5) Upon receiving the new photo and sending it to GPT4 Vision the server should display the following logs:
+1. On your alt account head to messenger.com or facebook.com/messages then open your newly created group chat
 
-```
-GPT4 Vision Request
-Sending request to GPT4 Vision
-Request Successful
-Saving data
-Reading stored data
-Creating new data file.
-Writing new data
-```
-6) Open up ``./public/data.json`` to check the successful added data
+2. Start monitoring the chat
 
-ENJOY!
+3. With each new message/image request it will send it to your chosen provider (ChatGPT, Claude etc) and then respond to you with the output
 
-#### Bookmarklet Code Breakdown:
+4. If enabled: It will then generate an audio clip of that output using OpenAI and send it back to you
 
-```javascript
-javascript: (function (s) {
-  //This a bookmarklet that you can either import as a bookmark
-  //OR you can copy all the code and paste into the URL when making a new bookmark
-  //OR post in dev console
+#### Examples
 
-  // This is designed to observe for any new photo messages that are sent in messenger and then to forward the image url to this projects REST api
+All chats can be done via voice commands "Hey Meta send a message to \_\_\_" or by simply messaging the group chat.
 
-  const messages = document.getElementsByClassName("x78zum5 xdt5ytf x1iyjqo2 xs83m0k x1xzczws x6ikm8r x1rife3k x1n2onr6 xh8yej3")[1].childNodes[2];
+#### OpenAI query with Minimax text to speech
 
-  // This is to find the messages container within messenger.com for the selected chat
+![](/assets/messenger-example-1.png)
 
-  // However, these obfuscated classes are subject to change and so this is likely to break in the near future
+#### Using Perplexity to answer a question accurately
 
-  messages.removeEventListener("DOMNodeInserted", null);
+![](/assets/messenger-example-2.png)
 
-  // The utilization of DOMNodeInserted is very bad practice and will be deprecated in all browsers in the future
+#### Using GPT 4.1 to describe an image
 
-  // Mutation observer should replace DOMNodeInserted
-  messages.addEventListener("DOMNodeInserted", async (event) => {
-    const imgSrc = event?.target?.getElementsByTagName("img")[1]?.src;
-    if (imgSrc) {
-      const res = await fetch("http://localhost:3103/api/gpt-4-vision", {
-        method: "POST",
-
-        //Facebook's image urls contains lots of properties that need to be perfectly preserved in order to view the image
-        body: JSON.stringify({ imageUrl: imgSrc }),
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = res.json();
-      console.log(data);
-    }
-  });
-  alert("Added Messenger Chat Observer");
-})();
-```
+![](/assets/messenger-example-3.png)
 
 by [Devon Crebbin](https://github.com/dcrebbin)
 
 Please reach out if there are any issues or feature requests :)
 
 Hopefully the Meta Reality Labs team will provide an SDK in the future so these types of integrations can be ✨productionised✨
+
+Credits:
+
+[Anime Sky from Vecteezy](https://www.vecteezy.com/vector-art/53757812-an-anime-style-illustration-of-clouds-in-the-sky) is used in the icon

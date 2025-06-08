@@ -1,0 +1,67 @@
+{
+  "extensionDescription": {
+    "description": "Description of the extension.",
+    "message": "[Unofficial] Browser extension & hacky API for the Meta Rayban Glasses."
+  },
+  "extensionName": {
+    "description": "Name of the extension.",
+    "message": "Mai - Meta Glasses API for Messenger"
+  },
+  "hello": {
+    "message": "Hello from"
+  },
+  "star": {
+    "message": "Star"
+  },
+  "follow": {
+    "message": "Follow"
+  },
+  "learnMore": {
+    "message": "Learn more"
+  },
+  "contentScriptUI": {
+    "message": "Content Script UI"
+  },
+  "light": {
+    "message": "Light"
+  },
+  "dark": {
+    "message": "Dark"
+  },
+  "system": {
+    "message": "System"
+  },
+  "name": {
+    "message": "Name"
+  },
+  "email": {
+    "message": "Email"
+  },
+  "password": {
+    "message": "Password"
+  },
+  "login": {
+    "message": "Login"
+  },
+  "loginDescription": {
+    "message": "Enter your email below to login to your account"
+  },
+  "register": {
+    "message": "Register"
+  },
+  "registerDescription": {
+    "message": "Enter your details below to register for an account"
+  },
+  "logout": {
+    "message": "Logout"
+  },
+  "continueWith": {
+    "message": "Or continue with"
+  },
+  "alreadyHaveAccount": {
+    "message": "Already have an account?"
+  },
+  "dontHaveAccount": {
+    "message": "Don't have an account?"
+  }
+}
