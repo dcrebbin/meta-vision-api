@@ -1,61 +1,63 @@
-# mai - Meta Glasses API for Messenger
+# Mai - Meta Glasses API for Messenger
 
 ![](/assets/mai-promotional.png)
 
-This is a browser extension to add custom AI bots to messenger that can be used with the Meta Rayban Smart Glasses or the standalone messenger app.
+**This is a browser extension to add custom AI bots to messenger that can be used with the Meta Rayban Smart Glasses or the standalone messenger app.**
 
-Features:
+## Features:
 
-Hey Meta send a photo to my food log: [Video Demo](https://www.youtube.com/watch?v=PiEDrcLCmew)
+1. Hey Meta send a photo to my food log: [Video Demo](https://www.youtube.com/watch?v=PiEDrcLCmew)
 
-Video Monitoring
-![](/assets/video-monitoring.png)
+2. Hey Meta send a message to ChatGPT
 
-Requirements:
+3. Video Monitoring: Send screenshots of your video calls to your chosen provider (ChatGPT, Claude etc) and then log the output to the log viewer
+   ![](/assets/video-monitoring.png)
 
-a) [Meta Rayban Smart Glasses](https://about.fb.com/news/2023/09/new-ray-ban-meta-smart-glasses/)
+### Requirements:
 
-b) [OpenAI/Perplexity/Claude Api Key](https://platform.openai.com/)
+a) [Meta Rayban Smart Glasses](https://about.fb.com/news/2023/09/new-ray-ban-meta-smart-glasses/) (or the standalone messenger app)
+
+b) [OpenAI/Perplexity/Claude etc Api Key](https://platform.openai.com/)
 
 c) Alternative Facebook/Messenger account
 
-d) Chromium based browser
-
-e) Bun
-
-# Chrome Extension
+### Browser Extension Setup
 
 1. bun install
 
-2.
+2. bun run dev:chrome (or brave, firefox)
 
-## Hey Meta Send a Photo to **\_\_\_\_\_**
+3. This should build and run the extension and automatically open it
 
-Before we setup our chrome extension we're going to trick the Meta Glasses into allowing us to send a message to (nearly) any name e.g: "Hey Meta send a message to ChatGPT".
+4. Add any api keys you want to use in the extension: the API settings tab has more information on how to get them
+
+## Hey Meta Send a Photo/Message to **\_\_\_\_\_**
+
+Before we setup our extension we're going to trick the Meta Glasses into allowing us to send a message to (nearly) any name e.g: "Hey Meta send a message to ChatGPT".
 
 ### Tricking Meta
 
 1. Create a messenger group chat with 2 other facebook accounts (the minimum amount allowed to create a group chat)
 
-![](/tutorial/create-a-chat.png)
+![](/assets/create-a-chat.png)
 
 2. Remove the account you're not going to use
-   ![](/tutorial/remove-member.png)
+   ![](/assets/remove-member.png)
 
 3. Change the name of the chat
-   ![](/tutorial/change-chat-name.png)
+   ![](/assets/change-chat-name.png)
 
 4. Update the group chat photo (for a legit feel)
-   ![](/tutorial/change-photo.png)
+   ![](/assets/change-photo.png)
 
 5. Set a nickname for your alt bot account
-   ![](/tutorial/edit-nickname.png)
+   ![](/assets/edit-nickname.png)
 
 6. Go to the Meta view app within the communications section
-   ![](/tutorial/communications.jpeg)
+   ![](/assets/communications.jpeg)
 
 7. Go to Messenger and disconnect then reconnect your messenger account
-   ![](/tutorial/disconnect.jpeg)
+   ![](/assets/disconnect.jpeg)
 
 I believe this step resyncs all your latest chats and friends which then allows that Meta Glasses to become aware of your newly created group chat to allow for voice commands!
 
@@ -63,28 +65,27 @@ I believe this step resyncs all your latest chats and friends which then allows 
 
 1. On your alt account head to messenger.com or facebook.com/messages then open your newly created group chat
 
-2. Ensure the input (ChatGPT) matches the name of your group chat then start monitoring the chat
-   ![](/tutorial/chat-monitoring.png)
+2. Start monitoring the chat
 
-3. With each new message request it will send it to your chosen provider (ChatGPT, Perplexity) and then respond to you with the output
+3. With each new message/image request it will send it to your chosen provider (ChatGPT, Claude etc) and then respond to you with the output
 
-4. It will then generate an audio clip of that output using OpenAI and send it back to you
+4. If enabled: It will then generate an audio clip of that output using OpenAI and send it back to you
 
 #### Examples
 
 All chats can be done via voice commands "Hey Meta send a message to \_\_\_" or by simply messaging the group chat.
 
-a) Asking ChatGPT to give translations (will split the audio to maintain the Chinese accent when speaking Chinese)
+#### OpenAI query with Minimax text to speech
 
-![](/tutorial/chatgpt.jpeg)
+![](/assets/messenger-example-1.png)
 
-b) Asking Perplexity about topical events
+#### Using Perplexity to answer a question accurately
 
-![](/tutorial/perplexity.jpeg)
+![](/assets/messenger-example-2.png)
 
-### Video Monitoring
+#### Using GPT 4.1 to describe an image
 
-TODO
+![](/assets/messenger-example-3.png)
 
 by [Devon Crebbin](https://github.com/dcrebbin)
 
