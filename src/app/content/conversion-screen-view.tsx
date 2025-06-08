@@ -18,6 +18,7 @@ export function ConversionScreenView() {
   const { settings, setSettings } = useSettingsStore();
 
   const threadList = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const selector = "div[aria-label='Thread list']";
 
@@ -65,28 +66,30 @@ export function ConversionScreenView() {
   }
 
   function getNewMessageLine(mutation: MutationRecord) {
-    const div = mutation.addedNodes[0] as HTMLDivElement;
+    if (!mutation.addedNodes || mutation.addedNodes.length === 0) return;
+    const div = mutation.addedNodes[0];
+    if (!(div instanceof HTMLDivElement)) return;
+    const divParent = div.parentElement;
+    if (!divParent) return;
+    const children = Array.from(divParent.childNodes);
+    if (children[children.length - 1] !== div) return;
+
     const messageContainer = div.querySelector(
       "div.html-div"
-    ) as HTMLDivElement;
-    if (!messageContainer) {
-      return;
-    }
-    const parent = messageContainer?.parentElement;
+    ) as HTMLDivElement | null;
+    if (!messageContainer) return;
+    const parent = messageContainer.parentElement;
+    if (!parent) return;
 
-    const messageLine = parent?.childNodes[1] as HTMLDivElement;
-    if (!messageLine || messageLine.dataset.processed) {
-      return;
-    }
-    if (messageLine.childNodes.length <= 1) {
-      return;
-    }
+    const messageLine = parent.childNodes[1] as HTMLDivElement | undefined;
+    if (!messageLine || (messageLine as any).dataset?.processed) return;
+    if (messageLine.childNodes.length <= 1) return;
     if (
-      messageLine &&
-      messageLine?.previousSibling?.textContent == "You sent"
-    ) {
+      messageLine.previousSibling &&
+      messageLine.previousSibling.textContent === "You sent"
+    )
       return;
-    }
+
     return messageLine;
   }
 
@@ -107,22 +110,19 @@ export function ConversionScreenView() {
     [sendAudioToUser]
   );
 
-  const handleNewTextMessage = useCallback(
-    async (receivedMessage: string) => {
-      logMessage("User sent: " + receivedMessage);
-      try {
-        const aiResponse = await sendMessage(Message.AI_CHAT, receivedMessage);
-        sendMessageToUser(aiResponse);
-        if (settings.useTTS) {
-          handleTts(aiResponse);
-        }
-      } catch (error: unknown) {
-        logError("Error sending message to user: " + error);
-        alert(error);
+  async function handleNewTextMessage(receivedMessage: string) {
+    logMessage("User sent: " + receivedMessage);
+    try {
+      const aiResponse = await sendMessage(Message.AI_CHAT, receivedMessage);
+      sendMessageToUser(aiResponse);
+      if (settings.useTTS) {
+        handleTts(aiResponse);
       }
-    },
-    [sendMessage, sendMessageToUser, settings.useTTS, handleTts]
-  );
+    } catch (error: unknown) {
+      logError("Error sending message to user: " + error);
+      alert(error);
+    }
+  }
 
   function sendMessageToUser(aiResponse: string) {
     enterMessage(aiResponse);
@@ -174,14 +174,20 @@ export function ConversionScreenView() {
       mutations.forEach(async (mutation) => {
         if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
           const messageLine = getNewMessageLine(mutation);
-          if (!messageLine || messageLine.dataset.processed) {
+          if (!messageLine) {
             return;
           }
-          messageLine.dataset.processed = "true";
+
           if (messageHasImage(messageLine)) {
-            const imageUrl = messageHasImage(messageLine);
-            sendReceivedImageToServer(imageUrl);
-            return logMessage(`Image received: ${imageUrl}`);
+            try {
+              const imageUrl = messageHasImage(messageLine);
+              sendReceivedImageToServer(imageUrl);
+              return logMessage(`Image received: ${imageUrl}`);
+            } catch (error) {
+              logError("Error sending image to server: " + error);
+              alert(error);
+              return;
+            }
           }
           const receivedMessage = messageLine.childNodes[1]?.textContent;
           if (receivedMessage && typeof receivedMessage === "string") {
@@ -335,6 +341,8 @@ export function ConversionScreenView() {
     return false;
   }
 
+  let userScrolling = false;
+
   useEffect(() => {
     if (!session.isMonitoring) {
       return;
@@ -345,9 +353,37 @@ export function ConversionScreenView() {
     if (conversation) {
       const scrollContent = conversation.firstChild
         ?.firstChild as HTMLDivElement;
-      scrollContent.addEventListener("scroll", stopChatMonitoring);
+
+      scrollContent.addEventListener("wheel", () => (userScrolling = true), {
+        passive: true,
+      });
+      scrollContent.addEventListener(
+        "touchstart",
+        () => (userScrolling = true),
+        { passive: true }
+      );
+      scrollContent.addEventListener("keydown", () => (userScrolling = true), {
+        passive: true,
+      });
+
+      scrollContent.addEventListener("scroll", () => {
+        if (userScrolling) {
+          stopChatMonitoring();
+          userScrolling = false;
+        } else {
+          // Programmatic scroll
+          console.log("programmatic scroll");
+        }
+      });
       return () => {
-        scrollContent.removeEventListener("scroll", stopChatMonitoring);
+        scrollContent.removeEventListener(
+          "wheel",
+          () => (userScrolling = true)
+        );
+        scrollContent.removeEventListener(
+          "touchstart",
+          () => (userScrolling = true)
+        );
       };
     }
   }, [session.isMonitoring]);
