@@ -287,18 +287,24 @@ export function ConversionScreenView() {
       >
         {Object.keys(providerToTTSModels).map((ttsModel) => (
           <option key={ttsModel} value={ttsModel}>
-            {`${
+            {
               providerToTTSModels[ttsModel as keyof typeof providerToTTSModels]
                 .title
-            }${
-              providerInformation[ttsModel as keyof typeof providerInformation]
-                ? ` (${
-                    providerInformation[
-                      ttsModel as keyof typeof providerInformation
-                    ].title
-                  })`
-                : ""
-            }`}
+            }
+            {providerToTTSModels[ttsModel as keyof typeof providerToTTSModels]
+              .provider &&
+            providerInformation[
+              providerToTTSModels[ttsModel as keyof typeof providerToTTSModels]
+                .provider as keyof typeof providerInformation
+            ]
+              ? ` (${
+                  providerInformation[
+                    providerToTTSModels[
+                      ttsModel as keyof typeof providerToTTSModels
+                    ].provider as keyof typeof providerInformation
+                  ].title
+                })`
+              : ""}
           </option>
         ))}
       </select>
