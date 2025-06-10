@@ -130,13 +130,18 @@ export async function aiTtsRequest(message: string) {
   logMessage(
     `(aiTtsRequest) | message: ${message} | ttsProvider: ${ttsProvider}`
   );
+  const ttsModel = settingsValue.ttsModel;
 
   try {
     switch (ttsProvider) {
       case TTSProvider.OPENAI:
         return openAiTtsRequest(message);
       case TTSProvider.ELEVENLABS:
-        return elevenLabsTtsRequest(message);
+        if (ttsModel === "eleven_v3") {
+          return elevenLabsV3TtsRequest(message);
+        } else {
+          return elevenLabsTtsRequest(message);
+        }
       case TTSProvider.MINIMAX:
         return minimaxTtsRequest(message);
       default:
@@ -163,6 +168,42 @@ async function retrieveBase64Audio(audioBlob: Blob) {
     logError(`(retrieveBase64Audio) ${error}`);
     throw error;
   }
+}
+
+async function elevenLabsV3TtsRequest(message: string) {
+  logMessage("elevenLabsV3TtsRequest");
+  const storageApiKey = getStorage(StorageKey.API_KEYS);
+  const apiKeys = await storageApiKey.getValue();
+  const apiKey = apiKeys[TTSProvider.ELEVENLABS];
+  if (!apiKey) {
+    throw new Error(
+      `No API key found for provider: ${TTSProvider.ELEVENLABS}. Please set it in the toolbar.`
+    );
+  }
+  const response = await fetch(
+    "https://api.us.elevenlabs.io/v1/text-to-dialogue/stream?",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        Accept: "audio/mpeg",
+      },
+      body: JSON.stringify({
+        inputs: [
+          {
+            text: message,
+            voice_id: "cgSgspJ2msm6clMCkdW9",
+          },
+        ],
+        model_id: "eleven_v3",
+        settings: { stability: 0.5, use_speaker_boost: true },
+      }),
+    }
+  );
+
+  const audioBlob = await response.blob();
+  return retrieveBase64Audio(audioBlob);
 }
 
 async function elevenLabsTtsRequest(message: string) {

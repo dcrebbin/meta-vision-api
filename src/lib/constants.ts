@@ -139,6 +139,11 @@ export const providerToTTSModels = {
     value: "eleven_turbo_v2_5",
     provider: "elevenlabs",
   },
+  eleven_v3: {
+    title: "V3",
+    value: "eleven_v3",
+    provider: "elevenlabs",
+  },
   "speech-02-turbo": {
     title: "Speech 02 Turbo",
     value: "speech-02-turbo",
