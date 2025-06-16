@@ -2,12 +2,28 @@ import { ElevenLabsLogo } from "./logos/11labs";
 import { AnthropicLogo } from "./logos/anthropic";
 import { DeepSeekLogo } from "./logos/deepseek";
 import { GoogleLogo } from "./logos/google";
+import { InflectionLogo } from "./logos/inflection";
+import { MetaLogo } from "./logos/meta";
 import { MinimaxLogo } from "./logos/minimax";
 import { OpenAILogo } from "./logos/openai";
 import { PerplexityLogo } from "./logos/perplexity";
 import { XAILogo } from "./logos/xai";
 
 export const providerInformation = {
+  llama: {
+    title: "Llama",
+    url: "https://llamacom",
+    modelsUrl: "https://llama.com",
+    apiKeyUrl: "https://llama.com",
+    logo: MetaLogo,
+  },
+  inflection: {
+    title: "Inflection",
+    url: "https://inflection.ai",
+    modelsUrl: "https://developers.inflection.ai",
+    apiKeyUrl: "https://developers.inflection.ai",
+    logo: InflectionLogo,
+  },
   openai: {
     title: "OpenAI",
     url: "https://openai.com",
@@ -71,6 +87,8 @@ export const MESSENGER_CALL_URL = "groupcall/ROOM";
 export const MESSENGER_CONVERSATION_URL = "messages/t/";
 
 export const aiChatProviders = [
+  "llama",
+  "inflection",
   "openai",
   "anthropic",
   "perplexity",
@@ -80,6 +98,30 @@ export const aiChatProviders = [
 ];
 
 export const providerToModels = {
+  llama: [
+    {
+      title: "Llama-4-Maverick",
+      value: "Llama-4-Maverick-17B-128E-Instruct-FP8",
+    },
+  ],
+  inflection: [
+    {
+      title: "Pi-3.0",
+      value: "inflection_3_pi",
+    },
+    {
+      title: "Pi-3.1",
+      value: "Pi-3.1",
+    },
+    {
+      title: "Llama-Inf-3.1-70B-EQ-Reasoning",
+      value: "Llama-Inf-3.1-70B-EQ-Reasoning",
+    },
+    {
+      title: "Llama-Inf-3.1-70B-Productivity",
+      value: "Llama-Inf-3.1-70B-Productivity",
+    },
+  ],
   openai: [
     {
       title: "GPT-4.1",

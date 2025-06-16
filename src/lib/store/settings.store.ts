@@ -11,6 +11,7 @@ export interface SettingsStore {
       [key in Provider]: string;
     };
     ttsModel: string;
+    systemPrompt: string;
     videoCaptureInterval: number;
     isMaiUIVisible: boolean;
     isConversationSidebarVisible: boolean;

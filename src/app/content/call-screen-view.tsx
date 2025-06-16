@@ -6,6 +6,7 @@ import { Video, VideoOff } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import { ChatModelSettings } from "./components/chat-model-settings";
 import { ChatProviderSettings } from "./components/chat-provider-settings";
+import { SystemPromptSettings } from "./components/system-prompt-settings";
 
 /**
  * Creates a PNG data-URL of the current frame of the first <video> that is
@@ -146,6 +147,7 @@ export function CallScreenView() {
       <div className="flex gap-2 rounded-md bg-white p-2 drop-shadow-md">
         <ChatProviderSettings darkMode={false} />
         <ChatModelSettings darkMode={false} />
+        <SystemPromptSettings darkMode={false} />
       </div>
     </div>
   );

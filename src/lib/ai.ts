@@ -10,6 +10,7 @@ import { createPerplexity, PerplexityProvider } from "@ai-sdk/perplexity";
 import { createXai, XaiProvider } from "@ai-sdk/xai";
 import { generateText } from "ai";
 import { providerToTTSModels } from "./constants";
+import { getSystemPromptById } from "./prompts";
 import { getStorage, StorageKey } from "./storage";
 import { logError, logMessage } from "./utils";
 
@@ -32,6 +33,16 @@ async function createAiProvider(
     );
   }
   switch (provider) {
+    case Provider.LLAMA:
+      return createOpenAI({
+        apiKey: apiKey,
+        baseURL: "https://api.llama.com/v1",
+      });
+    case Provider.INFLECTION:
+      return createOpenAI({
+        apiKey: apiKey,
+        baseURL: "https://api.inflection.ai/v1",
+      });
     case Provider.OPENAI:
       return createOpenAI({
         apiKey: apiKey,
@@ -66,11 +77,27 @@ export async function generateAiText(message: string) {
   const settingsValue = await settings.getValue();
   const provider = settingsValue.provider;
   const model = settingsValue.model[provider];
+  const systemPromptId = settingsValue.systemPrompt;
+  
   try {
     const aiProvider = await createAiProvider(provider);
+    const systemPrompt = getSystemPromptById(systemPromptId);
+    
+    const messages = [];
+    if (systemPrompt && systemPrompt.content) {
+      messages.push({
+        role: "system" as const,
+        content: systemPrompt.content
+      });
+    }
+    messages.push({
+      role: "user" as const,
+      content: message
+    });
+
     const { text } = await generateText({
       model: aiProvider(model),
-      prompt: message,
+      messages,
     });
     logMessage("generateAiText Response Generated: " + text);
     return text;

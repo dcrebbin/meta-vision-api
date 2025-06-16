@@ -31,6 +31,7 @@ onMessage(Message.ADD_LOG, async (message) => {
 });
 
 onMessage(Message.AI_CHAT, async (message) => {
+  console.log("[background] AI Chat Request Received", message.data);
   try {
     logMessage("[background] AI Chat Request Received");
     const response = await generateAiText(message.data);

@@ -2,6 +2,7 @@ import { type WxtStorageItem, storage as browserStorage } from "#imports";
 import { useEffect, useState } from "react";
 import { Provider, TTSProvider } from "~/types";
 import { Log } from "./messaging";
+import { DEFAULT_PROMPT_ID } from "./prompts";
 import { type SettingsStore } from "./store/settings.store";
 
 type StoredSettings = Omit<SettingsStore["settings"], "model"> & {
@@ -30,6 +31,8 @@ const storage = {
         provider: "openai",
         useTTS: false,
         model: {
+          llama: "Llama-4-Maverick-17B-128E-Instruct-FP8",
+          inflection: "Pi-3.1",
           openai: "gpt-4o-mini",
           anthropic: "claude-3-5-sonnet-20240620",
           perplexity: "sonar-pro",
@@ -38,6 +41,7 @@ const storage = {
           xai: "grok-3-latest",
         },
         ttsModel: "tts-1",
+        systemPrompt: DEFAULT_PROMPT_ID,
         videoCaptureInterval: 1000,
         isMaiUIVisible: true,
         isConversationSidebarVisible: false,
@@ -48,6 +52,8 @@ const storage = {
     [key in Provider | TTSProvider]: string;
   }>(StorageKey.API_KEYS, {
     fallback: {
+      llama: "",
+      inflection: "",
       openai: "",
       anthropic: "",
       perplexity: "",

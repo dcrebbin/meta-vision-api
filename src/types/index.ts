@@ -12,6 +12,8 @@ export const TTSProvider = {
 } as const;
 
 export const Provider = {
+  LLAMA: "llama",
+  INFLECTION: "inflection",
   OPENAI: "openai",
   ANTHROPIC: "anthropic",
   PERPLEXITY: "perplexity",

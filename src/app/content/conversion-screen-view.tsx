@@ -11,6 +11,7 @@ import { logError, logMessage } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
 import { ChatModelSettings } from "./components/chat-model-settings";
 import { ChatProviderSettings } from "./components/chat-provider-settings";
+import { SystemPromptSettings } from "./components/system-prompt-settings";
 import { SettingHeader } from "./components/setting-header";
 
 export function ConversionScreenView() {
@@ -524,6 +525,7 @@ export function ConversionScreenView() {
         <div className="flex flex-row w-full h-16 gap-2">
           <ChatProviderSettings darkMode={true} />
           <ChatModelSettings darkMode={true} />
+          <SystemPromptSettings darkMode={true} />
           {ttsSettings}
         </div>
       </div>
