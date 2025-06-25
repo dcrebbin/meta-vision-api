@@ -2,6 +2,8 @@
 
 ![](/assets/mai-promotional.png)
 
+Note: by using this project you agree to the terms of use outlined in [TERMS_OF_USE.md](https://github.com/dcrebbin/meta-glasses-api/blob/main/TERMS_OF_USE.md)
+
 **This is a browser extension to add custom AI bots to messenger that can be used with the Meta Rayban Smart Glasses or the standalone messenger app.**
 
 ## Features:
